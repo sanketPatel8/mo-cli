@@ -40,8 +40,9 @@ import {
   ApiVersion,
   AppDistribution,
   shopifyApp,
-  CustomSessionStorage,
 } from "@shopify/shopify-app-remix/server";
+
+import { CustomSessionStorage } from "@shopify/shopify-app-session-storage";
 
 import pool from "./db.server";
 

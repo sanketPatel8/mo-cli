@@ -59,7 +59,7 @@ import { Session } from "@shopify/shopify-api"; // 👈 import Session class
 //     return true;
 //   }
 // }
-
+const storingShops = new Set();
 class MySQLSessionStorage {
   // async storeSession(session) {
   //   const sessionData = JSON.stringify(session);
@@ -80,20 +80,21 @@ class MySQLSessionStorage {
   // }
 
   async storeSession(session) {
+    if (storingShops.has(session.shop)) return true; // skip duplicate
+    storingShops.add(session.shop);
+
     const sessionData = JSON.stringify(session);
 
     const [result] = await pool.query(
       `INSERT INTO sessions (id, shop, accessToken, sessionData, updatedAt)
-     VALUES (?, ?, ?, ?, NOW())
-     ON DUPLICATE KEY UPDATE
-       accessToken = VALUES(accessToken),
-       sessionData = VALUES(sessionData),
-       updatedAt = NOW()`,
+       VALUES (?, ?, ?, ?, NOW())
+       ON DUPLICATE KEY UPDATE
+         accessToken = VALUES(accessToken),
+         sessionData = VALUES(sessionData),
+         updatedAt = NOW()`,
       [session.id, session.shop, session.accessToken, sessionData],
     );
 
-    // affectedRows === 1 → inserted
-    // affectedRows === 2 → updated
     if (result.affectedRows === 1) {
       console.log("✅ Inserted new session for shop:", session.shop);
     } else if (result.affectedRows === 2) {

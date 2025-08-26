@@ -64,31 +64,17 @@ class MySQLSessionStorage {
   async storeSession(session) {
     const sessionData = JSON.stringify(session);
 
-    // Check if a session for this shop already exists
-    const [existing] = await pool.query(
-      `SELECT id FROM sessions WHERE shop = ?`,
-      [session.shop],
+    await pool.query(
+      `INSERT INTO sessions (id, shop, accessToken, sessionData, updatedAt)
+       VALUES (?, ?, ?, ?, NOW())
+       ON DUPLICATE KEY UPDATE
+         accessToken = VALUES(accessToken),
+         sessionData = VALUES(sessionData),
+         updatedAt = NOW()`,
+      [session.id, session.shop, session.accessToken, sessionData],
     );
 
-    if (existing.length > 0) {
-      // Update existing session
-      await pool.query(
-        `UPDATE sessions
-         SET accessToken = ?, sessionData = ?, updatedAt = NOW()
-         WHERE shop = ?`,
-        [session.accessToken, sessionData, session.shop],
-      );
-      console.log("🔄 Updated session for shop:", session.shop);
-    } else {
-      // Insert new session
-      await pool.query(
-        `INSERT INTO sessions (id, shop, accessToken, sessionData, updatedAt)
-         VALUES (?, ?, ?, ?, NOW())`,
-        [session.id, session.shop, session.accessToken, sessionData],
-      );
-      console.log("✅ Stored new session for shop:", session.shop);
-    }
-
+    console.log("✅ Stored/Updated session for shop:", session.shop);
     return true;
   }
 

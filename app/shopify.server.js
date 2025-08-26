@@ -41,10 +41,10 @@ import {
   AppDistribution,
   shopifyApp,
 } from "@shopify/shopify-app-remix/server";
-
-import { CustomSessionStorage } from "@shopify/shopify-app-session-storage";
-
+import sessionStoragePkg from "@shopify/shopify-app-session-storage";
 import pool from "./db.server";
+
+const { CustomSessionStorage } = sessionStoragePkg;
 
 // --- Custom MySQL session storage ---
 
@@ -112,7 +112,7 @@ const shopify = shopifyApp({
 
   authPathPrefix: "/auth",
 
-  sessionStorage: new CustomSessionStorage(sessionStore), // 👈 using MySQL
+  // sessionStorage: new CustomSessionStorage(sessionStore), // 👈 using MySQL
 
   distribution: AppDistribution.AppStore,
 
@@ -121,20 +121,33 @@ const shopify = shopifyApp({
 
     removeRest: true,
   },
+  sessionStorage: new CustomSessionStorage(
+    async (id) => {
+      console.log("👉 Load session:", id);
+
+      // Load session from MySQL
+    },
+
+    async (session) => {
+      console.log("✅ Store session:", session.shop);
+
+      // Save session to MySQL
+    },
+
+    async (id) => {
+      console.log("❌ Delete session:", id);
+
+      // Delete session from MySQL
+    },
+  ),
 });
 
 export default shopify;
 
 export const apiVersion = ApiVersion.January25;
-
 export const addDocumentResponseHeaders = shopify.addDocumentResponseHeaders;
-
 export const authenticate = shopify.authenticate;
-
 export const unauthenticated = shopify.unauthenticated;
-
 export const login = shopify.login;
-
 export const registerWebhooks = shopify.registerWebhooks;
-
 export const sessionStorage = shopify.sessionStorage;

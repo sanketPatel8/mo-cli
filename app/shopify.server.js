@@ -8,99 +8,21 @@ import {
 import pool from "./db.server.js";
 import { Session } from "@shopify/shopify-api"; // 👈 import Session class
 
-// --- Custom MySQL Session Storage ---
-// class MySQLSessionStorage {
-//   async storeSession(session) {
-//     const sessionData = JSON.stringify(session);
-
-//     await pool.query(
-//       `INSERT INTO sessions (id, shop, accessToken, sessionData, updatedAt)
-//        VALUES (?, ?, ?, ?, NOW())
-//        ON DUPLICATE KEY UPDATE shop = VALUES(shop),
-//                                accessToken = VALUES(accessToken),
-//                                sessionData = VALUES(sessionData),
-//                                updatedAt = NOW()`,
-//       [session.id, session.shop, session.accessToken, sessionData],
-//     );
-
-//     console.log("✅ Stored session for shop:", session.shop);
-//     return true;
-//   }
-
-//   async loadSession(id) {
-//     const [rows] = await pool.query(
-//       `SELECT sessionData FROM sessions WHERE id = ?`,
-//       [id],
-//     );
-
-//     if (rows.length === 0) return undefined;
-
-//     const rawData = JSON.parse(rows[0].sessionData);
-
-//     // 👇 Rebuild Session object from JSON
-//     const session = new Session(rawData.id);
-//     Object.assign(session, rawData);
-
-//     console.log("👉 Loaded session:", id);
-//     return session;
-//   }
-
-//   async deleteSession(id) {
-//     await pool.query(`DELETE FROM sessions WHERE id = ?`, [id]);
-//     console.log("🗑️ Deleted session:", id);
-//     return true;
-//   }
-
-//   async deleteSessions(ids) {
-//     if (!ids || ids.length === 0) return true;
-
-//     await pool.query(`DELETE FROM sessions WHERE id IN (?)`, [ids]);
-//     console.log("🗑️ Deleted multiple sessions:", ids);
-//     return true;
-//   }
-// }
-const storingShops = new Set();
 class MySQLSessionStorage {
-  // async storeSession(session) {
-  //   const sessionData = JSON.stringify(session);
-
-  //   await pool.query(
-  //     `INSERT INTO sessions (id, shop, accessToken, sessionData, updatedAt)
-  //      VALUES (?, ?, ?, ?, NOW())
-  //      ON DUPLICATE KEY UPDATE
-  //        accessToken = VALUES(accessToken),
-  //        sessionData = VALUES(sessionData),
-  //        updatedAt = NOW()`,
-  //     [session.id, session.shop, session.accessToken, sessionData],
-  //   );
-
-  //   console.log("✅ Stored/Updated session for shop:", session.shop);
-  //   console.log(session.accessToken, "session.accessToken");
-  //   return true;
-  // }
-
   async storeSession(session) {
-    if (storingShops.has(session.shop)) return true; // skip duplicate
-    storingShops.add(session.shop);
-
     const sessionData = JSON.stringify(session);
 
-    const [result] = await pool.query(
+    await pool.query(
       `INSERT INTO sessions (id, shop, accessToken, sessionData, updatedAt)
-       VALUES (?, ?, ?, ?, NOW())
-       ON DUPLICATE KEY UPDATE
-         accessToken = VALUES(accessToken),
-         sessionData = VALUES(sessionData),
-         updatedAt = NOW()`,
+     VALUES (?, ?, ?, ?, NOW())
+     ON DUPLICATE KEY UPDATE
+       accessToken = VALUES(accessToken),
+       sessionData = VALUES(sessionData),
+       updatedAt = NOW()`,
       [session.id, session.shop, session.accessToken, sessionData],
     );
 
-    if (result.affectedRows === 1) {
-      console.log("✅ Inserted new session for shop:", session.shop);
-    } else if (result.affectedRows === 2) {
-      console.log("🔄 Updated existing session for shop:", session.shop);
-    }
-
+    console.log("✅ Stored/Updated session for shop:", session.shop);
     return true;
   }
 

@@ -42,13 +42,71 @@ import {
   shopifyApp,
 } from "@shopify/shopify-app-remix/server";
 
-import sessionStoragePkg from "@shopify/shopify-app-session-storage";
+import pool from "./db.server.js"; // your MySQL connection pool
 
-import pool from "./db.server.js";
+// --- Custom MySQL Session Storage ---
 
-const { CustomSessionStorage } = sessionStoragePkg;
+class MySQLSessionStorage {
+  async storeSession(session) {
+    const sessionData = JSON.stringify(session);
 
-// --- Shopify config with MySQL session storage ---
+    await pool.query(
+      `INSERT INTO sessions (id, shop, accessToken, sessionData, updatedAt)
+
+        VALUES (?, ?, ?, ?, NOW())
+
+        ON DUPLICATE KEY UPDATE 
+
+          shop = VALUES(shop),
+
+          accessToken = VALUES(accessToken),
+
+          sessionData = VALUES(sessionData),
+
+          updatedAt = NOW()`,
+
+      [session.id, session.shop, session.accessToken, sessionData],
+    );
+
+    console.log("✅ Stored session for shop:", session.shop);
+
+    return true;
+  }
+
+  async loadSession(id) {
+    const [rows] = await pool.query(
+      `SELECT sessionData FROM sessions WHERE id = ?`,
+
+      [id],
+    );
+
+    if (rows.length === 0) return undefined;
+
+    console.log("👉 Loaded session:", id);
+
+    return JSON.parse(rows[0].sessionData);
+  }
+
+  async deleteSession(id) {
+    await pool.query(`DELETE FROM sessions WHERE id = ?`, [id]);
+
+    console.log("🗑️ Deleted session:", id);
+
+    return true;
+  }
+
+  async deleteSessions(ids) {
+    if (!ids || ids.length === 0) return true;
+
+    await pool.query(`DELETE FROM sessions WHERE id IN (?)`, [ids]);
+
+    console.log("🗑️ Deleted multiple sessions:", ids);
+
+    return true;
+  }
+}
+
+// --- Shopify config ---
 
 const shopify = shopifyApp({
   apiKey: process.env.SHOPIFY_API_KEY,
@@ -63,6 +121,8 @@ const shopify = shopifyApp({
 
   authPathPrefix: "/auth",
 
+  sessionStorage: new MySQLSessionStorage(), // 👈 use our custom class
+
   distribution: AppDistribution.AppStore,
 
   future: {
@@ -70,56 +130,6 @@ const shopify = shopifyApp({
 
     removeRest: true,
   },
-
-  // ✅ MySQL custom session storage
-
-  sessionStorage: new CustomSessionStorage(
-    // load
-
-    async (id) => {
-      const [rows] = await pool.query(
-        `SELECT sessionData FROM sessions WHERE id = ?`,
-
-        [id],
-      );
-
-      if (rows.length === 0) return undefined;
-
-      console.log("👉 Loaded session:", id);
-
-      return JSON.parse(rows[0].sessionData);
-    },
-
-    // store
-
-    async (session) => {
-      const sessionData = JSON.stringify(session);
-
-      await pool.query(
-        `INSERT INTO sessions (id, shop, accessToken, sessionData)
-
-          VALUES (?, ?, ?, ?)
-
-          ON DUPLICATE KEY UPDATE shop=VALUES(shop), accessToken=VALUES(accessToken), sessionData=VALUES(sessionData), updatedAt=NOW()`,
-
-        [session.id, session.shop, session.accessToken, sessionData],
-      );
-
-      console.log("✅ Stored session for shop:", session.shop);
-
-      return true;
-    },
-
-    // delete
-
-    async (id) => {
-      await pool.query(`DELETE FROM sessions WHERE id = ?`, [id]);
-
-      console.log("🗑️ Deleted session:", id);
-
-      return true;
-    },
-  ),
 });
 
 export default shopify;

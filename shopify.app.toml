@@ -2,7 +2,7 @@
 
 client_id = "4ae793f0ac22674c2b78446439aac4ba"
 name = "MyOperator"
-application_url = "https://gotta-asian-budgets-quiet.trycloudflare.com"
+application_url = "https://lands-surprised-eco-prophet.trycloudflare.com"
 embedded = true
 handle = "myoperator-flask01"
 
@@ -26,7 +26,7 @@ api_version = "2025-07"
 scopes = "read_orders,read_products,write_products"
 
 [auth]
-redirect_urls = ["https://gotta-asian-budgets-quiet.trycloudflare.com/auth/callback", "https://gotta-asian-budgets-quiet.trycloudflare.com/auth/shopify/callback", "https://gotta-asian-budgets-quiet.trycloudflare.com/api/auth/callback"]
+redirect_urls = ["https://lands-surprised-eco-prophet.trycloudflare.com/auth/callback", "https://lands-surprised-eco-prophet.trycloudflare.com/auth/shopify/callback", "https://lands-surprised-eco-prophet.trycloudflare.com/api/auth/callback"]
 
 [pos]
 embedded = false

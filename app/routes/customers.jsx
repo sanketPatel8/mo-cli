@@ -52,19 +52,19 @@ export const loader = async ({ request }) => {
   return json({ customers: response.body.customers });
 };
 
-export default function CustomersPage() {
-  const { customers } = useLoaderData();
+// export default function CustomersPage() {
+//   const { customers } = useLoaderData();
 
-  return (
-    <div>
-      <h1>Customer List</h1>
-      <ul>
-        {customers.map((c) => (
-          <li key={c.id}>
-            {c.first_name} {c.last_name}
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
+//   return (
+//     <div>
+//       <h1>Customer List</h1>
+//       <ul>
+//         {customers.map((c) => (
+//           <li key={c.id}>
+//             {c.first_name} {c.last_name}
+//           </li>
+//         ))}
+//       </ul>
+//     </div>
+//   );
+// }

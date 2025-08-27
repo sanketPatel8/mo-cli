@@ -66,9 +66,7 @@ const shopify = shopifyApp({
   appUrl: process.env.SHOPIFY_APP_URL || "",
   authPathPrefix: "/auth",
   sessionStorage: new MySQLSessionStorage(), // 👈 use our fixed class
-
   distribution: AppDistribution.AppStore,
-
   future: {
     unstable_newEmbeddedAuthStrategy: true,
     removeRest: true,
@@ -83,3 +81,6 @@ export const unauthenticated = shopify.unauthenticated;
 export const login = shopify.login;
 export const registerWebhooks = shopify.registerWebhooks;
 export const sessionStorage = shopify.sessionStorage;
+export const webhookHandler = async (request) => {
+  return await shopify.webhooks.process(request);
+};

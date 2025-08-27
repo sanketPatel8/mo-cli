@@ -1,17 +1,48 @@
-import { authenticate } from "../shopify.server";
+import { authenticate, shopify } from "../shopify.server";
 
 import { useLoaderData } from "@remix-run/react";
+import { getCustomerDetails } from "../utils/shopify-admin";
 
 export const loader = async ({ request }) => {
   const { session, shop } = await authenticate.admin(request);
-
-  // ✅ Log to Vercel logs
 
   console.log("✅ Store URL:", shop);
 
   console.log("✅ Access Token:", session.accessToken);
 
-  // Pass to component (not required but useful for debug)
+  // ✅ Register webhook
+
+  try {
+    await shopify.webhooks.register({
+      path: "/webhooks/shopify",
+
+      topic: "CUSTOMERS_CREATE",
+
+      webhookHandler: async (topic, shop, body) => {
+        const payload = JSON.parse(body);
+
+        const customerId = payload.id;
+
+        console.log(`📦 Webhook received from ${shop}`);
+
+        console.log(`👤 New customer ID: ${customerId}`);
+
+        // ✅ Load session for the shop so we can call Admin API
+
+        const session = await shopify.sessionStorage.loadSession(shop, false);
+
+        if (session) {
+          const customer = await getCustomerDetails(session, customerId);
+
+          console.log("🎯 Fetched customer:", customer);
+        } else {
+          console.error("❌ No session found for shop:", shop);
+        }
+      },
+    });
+  } catch (err) {
+    console.error("❌ Webhook registration error:", err);
+  }
 
   return { shop, accessToken: session.accessToken };
 };

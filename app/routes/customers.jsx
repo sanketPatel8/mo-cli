@@ -47,6 +47,8 @@ export const loader = async ({ request }) => {
 
   const response = await client.get({ path: "customers" });
 
+  console.log("Fetched customers:", response.body.customers);
+
   return json({ customers: response.body.customers });
 };
 

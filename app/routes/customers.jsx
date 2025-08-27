@@ -41,7 +41,7 @@ export async function loader() {
     );
 
     // 4) Build request URL & headers
-    const url = `https://${shop}/admin/api/2025-01/customers.json?limit=20`;
+    const url = `https://${shop}/admin/api/2025-07/customers.json?limit=20`;
     console.log("5) Calling Shopify REST endpoint:", url);
 
     // 5) Fetch from Shopify

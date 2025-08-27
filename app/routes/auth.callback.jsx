@@ -1,4 +1,4 @@
-import { authenticate, shopify } from "../shopify.server";
+import shopify, { authenticate } from "../shopify.server";
 
 import { useLoaderData } from "@remix-run/react";
 import { getCustomerDetails } from "../utils/shopify-admin";

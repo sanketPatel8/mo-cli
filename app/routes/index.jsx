@@ -1,5 +1,4 @@
 import { Link } from "@remix-run/react";
-import { authenticate } from "../shopify.server";
 
 export default function Index() {
   return (

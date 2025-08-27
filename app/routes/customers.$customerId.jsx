@@ -7,7 +7,15 @@ import { getCustomerDetails } from "../utils/shopify-admin";
 import { authenticate } from "../shopify.server";
 
 export const loader = async ({ request, params }) => {
-  const session = await authenticate.admin(request);
+  //   const session = await authenticate.admin(request);
+
+  //   const customer = await getCustomerDetails(session, params.customerId);
+
+  const authResult = await authenticate.admin(request);
+
+  if (authResult instanceof Response) return authResult;
+
+  const { session } = authResult;
 
   const customer = await getCustomerDetails(session, params.customerId);
 

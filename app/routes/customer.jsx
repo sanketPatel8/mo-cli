@@ -4,7 +4,7 @@ import { json } from "@remix-run/node";
 
 import { useLoaderData, Link } from "@remix-run/react";
 
-import { shopify } from "../shopify.server"; // or wherever it's defined
+import shopify from "../shopify.server"; // or wherever it's defined
 
 export const loader = async ({ request }) => {
   const session = await shopify.auth.authenticate.admin(request); // same as your `authenticate.admin()`

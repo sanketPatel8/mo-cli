@@ -36,21 +36,21 @@ import shopify, { authenticate } from "../shopify.server"; // adjust path
 //   }
 // };
 
-export const loader = async ({ request }) => {
-  const authResult = await authenticate.admin(request);
+// export const loader = async ({ request }) => {
+//   const authResult = await authenticate.admin(request);
 
-  if (authResult instanceof Response) return authResult;
+//   if (authResult instanceof Response) return authResult;
 
-  const { session } = authResult;
+//   const { session } = authResult;
 
-  const client = new shopify.api.clients.Rest({ session });
+//   const client = new shopify.api.clients.Rest({ session });
 
-  const response = await client.get({ path: "customers" });
+//   const response = await client.get({ path: "customers" });
 
-  console.log("Fetched customers:", response.body.customers);
+//   console.log("Fetched customers:", response.body.customers);
 
-  return json({ customers: response.body.customers });
-};
+//   return json({ customers: response.body.customers });
+// };
 
 // export default function CustomersPage() {
 //   const { customers } = useLoaderData();
@@ -68,3 +68,25 @@ export const loader = async ({ request }) => {
 //     </div>
 //   );
 // }
+
+export const loader = async ({ request }) => {
+  const authResult = await authenticate.admin(request);
+
+  if (authResult instanceof Response) {
+    console.log("🔁 Redirecting to /auth/login");
+
+    return authResult;
+  }
+
+  const { session } = authResult;
+
+  console.log("✅ Loaded session:", session.scope);
+
+  const client = new shopify.api.clients.Rest({ session });
+
+  const response = await client.get({ path: "customers" });
+
+  console.log("🎯 Customers:", response.body.customers);
+
+  return json({ customers: response.body.customers });
+};

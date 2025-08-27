@@ -6,33 +6,55 @@ import { useLoaderData } from "@remix-run/react";
 
 import shopify, { authenticate } from "../shopify.server"; // adjust path
 
+// export const loader = async ({ request }) => {
+//   try {
+//     const session = await authenticate.admin(request);
+
+//     if (!session) {
+//       throw new Error(
+//         "No Shopify session found — maybe not embedded or session expired?",
+//       );
+//     }
+
+//     const client = new shopify.api.clients.Rest({ session });
+
+//     const response = await client.get({ path: "customers" });
+
+//     if (!response?.body?.customers) {
+//       throw new Error("Shopify response missing customers field");
+//     }
+
+//     return json({ customers: response.body.customers });
+//   } catch (error) {
+//     console.error("Error loading customers:", {
+//       message: error?.message,
+
+//       stack: error?.stack,
+//     });
+
+//     throw new Response(`Loader error: ${error.message}`, { status: 500 });
+//   }
+// };
+
 export const loader = async ({ request }) => {
   try {
-    const session = await authenticate.admin(request);
+    const sessionResponse = await shopify.auth.authenticate.admin(request);
 
-    if (!session) {
-      throw new Error(
-        "No Shopify session found — maybe not embedded or session expired?",
-      );
+    // If it's a redirect response (302), return it
+
+    if (sessionResponse instanceof Response) {
+      return sessionResponse; // Shopify redirect to /auth/login
     }
 
-    const client = new shopify.api.clients.Rest({ session });
+    const client = new shopify.api.clients.Rest({ session: sessionResponse });
 
     const response = await client.get({ path: "customers" });
 
-    if (!response?.body?.customers) {
-      throw new Error("Shopify response missing customers field");
-    }
-
     return json({ customers: response.body.customers });
   } catch (error) {
-    console.error("Error loading customers:", {
-      message: error?.message,
+    console.error("Loader error:", error);
 
-      stack: error?.stack,
-    });
-
-    throw new Response(`Loader error: ${error.message}`, { status: 500 });
+    throw new Response("Failed to load customers", { status: 500 });
   }
 };
 

@@ -57,6 +57,7 @@ export async function loader() {
       "6) Shopify response status:",
       response.status,
       response.statusText,
+      response,
     );
 
     // 6) Read & parse response body safely

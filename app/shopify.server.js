@@ -12,6 +12,8 @@ class MySQLSessionStorage {
   async storeSession(session) {
     const sessionData = JSON.stringify(session);
 
+    console.log(sessionData.scope, "sessionData");
+
     await pool.query(
       `INSERT INTO sessions (id, shop, accessToken, sessionData, updatedAt)
      VALUES (?, ?, ?, ?, NOW())

@@ -10,9 +10,10 @@ export const loader = async ({ request }) => {
 
     if (authResult instanceof Response) {
       console.log("🔁 Redirect triggered by Shopify auth");
-      return authResult; // redirect to /auth/login or /auth/callback
+      return authResult; // ✅ stop here
     }
 
+    // if we're here, we KNOW session exists
     const { session } = authResult;
     console.log("✅ Session loaded for shop:", session.shop);
 
@@ -26,7 +27,7 @@ export const loader = async ({ request }) => {
     return json({ customers: response.body.customers || [] });
   } catch (error) {
     console.error("❌ Error in customers loader:", error);
-    throw error; // let Remix show its error boundary
+    throw error;
   }
 };
 

@@ -7,13 +7,19 @@ import { useLoaderData, Link } from "@remix-run/react";
 import shopify from "../shopify.server"; // or wherever it's defined
 
 export const loader = async ({ request }) => {
-  const session = await shopify.auth.authenticate.admin(request); // same as your `authenticate.admin()`
+  try {
+    const session = await shopify.auth.authenticate.admin(request);
 
-  const client = new shopify.api.clients.Rest({ session });
+    const client = new shopify.api.clients.Rest({ session });
 
-  const response = await client.get({ path: "customers" });
+    const response = await client.get({ path: "customers" });
 
-  return json({ customers: response.body.customers });
+    return json({ customers: response.body.customers });
+  } catch (error) {
+    console.error("Error loading customers:", error); // Log to Vercel console
+
+    throw new Response("Failed to load customers", { status: 500 });
+  }
 };
 
 export default function CustomersPage() {

@@ -2,7 +2,7 @@
 
 client_id = "4ae793f0ac22674c2b78446439aac4ba"
 name = "MyOperator"
-application_url = "https://allocated-quality-associated-ratio.trycloudflare.com"
+application_url = "https://bundle-ethical-milk-ne.trycloudflare.com"
 embedded = true
 handle = "myoperator-flask01"
 
@@ -26,7 +26,7 @@ api_version = "2025-07"
 scopes = "read_orders,read_products,read_customers"
 
 [auth]
-redirect_urls = ["https://allocated-quality-associated-ratio.trycloudflare.com/auth/callback", "https://allocated-quality-associated-ratio.trycloudflare.com/auth/shopify/callback", "https://allocated-quality-associated-ratio.trycloudflare.com/api/auth/callback"]
+redirect_urls = ["https://bundle-ethical-milk-ne.trycloudflare.com/auth/callback", "https://bundle-ethical-milk-ne.trycloudflare.com/auth/shopify/callback", "https://bundle-ethical-milk-ne.trycloudflare.com/api/auth/callback"]
 
 [pos]
 embedded = false

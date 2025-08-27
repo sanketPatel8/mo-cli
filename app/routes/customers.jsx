@@ -38,23 +38,29 @@ import shopify, { authenticate } from "../shopify.server"; // adjust path
 
 export const loader = async ({ request }) => {
   try {
-    const sessionResponse = await shopify.auth.authenticate.admin(request);
+    const session = await authenticate.admin(request);
 
-    // If it's a redirect response (302), return it
-
-    if (sessionResponse instanceof Response) {
-      return sessionResponse; // Shopify redirect to /auth/login
-    }
-
-    const client = new shopify.api.clients.Rest({ session: sessionResponse });
+    const client = new shopify.api.clients.Rest({ session });
 
     const response = await client.get({ path: "customers" });
 
     return json({ customers: response.body.customers });
   } catch (error) {
-    console.error("Loader error:", error);
+    console.error("Raw error loading customers:", error);
 
-    throw new Response("Failed to load customers", { status: 500 });
+    // Try to extract a message if possible
+
+    let message = "Unknown error";
+
+    if (typeof error === "string") {
+      message = error;
+    } else if (error instanceof Error) {
+      message = error.message;
+    } else if (error && typeof error === "object" && "message" in error) {
+      message = error.message;
+    }
+
+    throw new Response(`Loader error: ${message}`, { status: 500 });
   }
 };
 

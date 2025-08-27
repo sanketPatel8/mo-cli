@@ -4,11 +4,11 @@ import { json } from "@remix-run/node";
 
 import { useLoaderData } from "@remix-run/react";
 
-import  shopify  from "../shopify.server"; // adjust path
+import shopify, { authenticate } from "../shopify.server"; // adjust path
 
 export const loader = async ({ request }) => {
   try {
-    const session = await shopify.auth.authenticate.admin(request);
+    const session = await authenticate.admin(request);
 
     if (!session) {
       throw new Error(

@@ -2,23 +2,37 @@
 
 import { json } from "@remix-run/node";
 
-import { useLoaderData, Link } from "@remix-run/react";
+import { useLoaderData } from "@remix-run/react";
 
-import shopify from "../shopify.server"; // or wherever it's defined
+import { shopify } from "~/shopify.server"; // adjust path
 
 export const loader = async ({ request }) => {
   try {
     const session = await shopify.auth.authenticate.admin(request);
 
+    if (!session) {
+      throw new Error(
+        "No Shopify session found — maybe not embedded or session expired?",
+      );
+    }
+
     const client = new shopify.api.clients.Rest({ session });
 
     const response = await client.get({ path: "customers" });
 
+    if (!response?.body?.customers) {
+      throw new Error("Shopify response missing customers field");
+    }
+
     return json({ customers: response.body.customers });
   } catch (error) {
-    console.error("Error loading customers:", error); // Log to Vercel console
+    console.error("Error loading customers:", {
+      message: error?.message,
 
-    throw new Response("Failed to load customers", { status: 500 });
+      stack: error?.stack,
+    });
+
+    throw new Response(`Loader error: ${error.message}`, { status: 500 });
   }
 };
 
@@ -29,11 +43,9 @@ export default function CustomersPage() {
     <div>
       <h1>Customer List</h1>
       <ul>
-        {customers.map((customer) => (
-          <li key={customer.id}>
-            <Link to={`/customers/${customer.id}`}>
-              {customer.first_name} {customer.last_name}
-            </Link>
+        {customers.map((c) => (
+          <li key={c.id}>
+            {c.first_name} {c.last_name}
           </li>
         ))}
       </ul>

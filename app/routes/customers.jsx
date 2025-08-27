@@ -4,7 +4,7 @@ import { json } from "@remix-run/node";
 
 import { useLoaderData } from "@remix-run/react";
 
-import { shopify } from "~/shopify.server"; // adjust path
+import  shopify  from "../shopify.server"; // adjust path
 
 export const loader = async ({ request }) => {
   try {

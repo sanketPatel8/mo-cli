@@ -37,17 +37,31 @@ import shopify, { authenticate } from "../shopify.server"; // adjust path
 // };
 
 export const loader = async ({ request }) => {
-  const authResult = await authenticate.admin(request);
+  try {
+    const session = await authenticate.admin(request);
 
-  if (authResult instanceof Response) return authResult;
+    const client = new shopify.api.clients.Rest({ session });
 
-  const { session } = authResult;
+    const response = await client.get({ path: "customers" });
 
-  const client = new shopify.api.clients.Rest({ session });
+    return json({ customers: response.body.customers });
+  } catch (error) {
+    console.error("Raw error loading customers:", error);
 
-  const response = await client.get({ path: "customers" });
+    // Try to extract a message if possible
 
-  return json({ customers: response.body.customers });
+    let message = "Unknown error";
+
+    if (typeof error === "string") {
+      message = error;
+    } else if (error instanceof Error) {
+      message = error.message;
+    } else if (error && typeof error === "object" && "message" in error) {
+      message = error.message;
+    }
+
+    throw new Response(`Loader error: ${message}`, { status: 500 });
+  }
 };
 
 export default function CustomersPage() {

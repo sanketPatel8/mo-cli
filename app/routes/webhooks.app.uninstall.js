@@ -1,5 +1,5 @@
 import { json } from "@remix-run/node";
-import { forwardToWebhookSite } from "../../utils/forwardToWebhookSite.js";
+import { forwardToWebhookSite } from "../utils/forwardToWebhookSite.js";
 import pool from "../db.server.js";
 
 export async function action({ request }) {

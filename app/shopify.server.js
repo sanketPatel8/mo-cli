@@ -83,6 +83,11 @@ const shopify = shopifyApp({
       deliveryMethod: DeliveryMethod.Http,
       callbackUrl: "/webhooks/orders/paid",
     },
+    ORDERS_FULFILLED: {
+      // ✅ Add this block
+      deliveryMethod: DeliveryMethod.Http,
+      callbackUrl: "/webhooks/orders/fulfilled",
+    },
   },
 });
 

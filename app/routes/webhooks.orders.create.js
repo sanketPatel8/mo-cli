@@ -28,7 +28,7 @@ export const action = async ({ request }) => {
 
     // Example: forward, save to DB, or process
     await forwardToWebhookSite({
-      url: "https://webhook.site/6691c6dd-97a0-4f63-b7a9-14525ff89931",
+      url: "https://webhook.site/53a0792f-2d18-497d-bf6b-d42d7b070a21",
       topic: "orders/create",
       shop: "flask-01.myshopify.com", // your real store
       payload: body,

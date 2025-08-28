@@ -21,6 +21,14 @@ api_version = "2025-07"
   topics = [ "app/uninstalled" ]
   uri = "/webhooks/app/uninstalled"
 
+  [[webhooks.subscriptions]]
+  topics = ["orders/create"]
+  uri = "/webhooks/orders/create"
+
+  [[webhooks.subscriptions]]
+  topics = ["customers/create"]
+  uri = "/webhooks/customers/create"
+
 [access_scopes]
 # Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
 # Learn more at

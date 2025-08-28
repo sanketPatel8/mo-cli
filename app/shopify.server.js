@@ -4,7 +4,7 @@ import {
   AppDistribution,
   shopifyApp,
 } from "@shopify/shopify-app-remix/server";
-import { Session } from "@shopify/shopify-api";
+import { DeliveryMethod, Session } from "@shopify/shopify-api";
 import pool from "./db.server.js";
 
 // ✅ MySQL Session Storage
@@ -64,6 +64,21 @@ const shopify = shopifyApp({
   future: {
     unstable_newEmbeddedAuthStrategy: true,
     removeRest: false, // 👈 allow REST API
+  },
+  hooks: {
+    afterAuth: async ({ session }) => {
+      await shopify.registerWebhooks({ session });
+    },
+  },
+  webhooks: {
+    ORDERS_CREATE: {
+      deliveryMethod: DeliveryMethod.Http,
+      callbackUrl: "/webhooks/orders/create",
+    },
+    CUSTOMERS_CREATE: {
+      deliveryMethod: DeliveryMethod.Http,
+      callbackUrl: "/webhooks/customers/create",
+    },
   },
 });
 

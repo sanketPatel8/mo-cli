@@ -74,6 +74,23 @@ export async function loader() {
     const customers = data.customers || [];
     console.log(`7) Parsed customers count: ${customers.length}`);
 
+    try {
+      const nextApiUrl = `${process.env.SHOPIFY_NEXT_URI}/api/receive-customers`;
+
+      const sendResponse = await fetch(nextApiUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ customers }),
+      });
+
+      const sendResult = await sendResponse.json();
+      console.log("📤 Sent customers to Next.js API:", sendResult);
+    } catch (sendErr) {
+      console.error("❌ Failed to send customers to Next.js API:", sendErr);
+    }
+
     // 7) Log first few customer summaries (avoid giant dumps)
     if (customers.length > 0) {
       console.log("8) Sample customers (first 5):");
@@ -96,6 +113,8 @@ export async function loader() {
 
 export default function CustomersPage() {
   const { customers } = useLoaderData();
+
+  console.log(customers, "customers");
 
   return (
     <div>

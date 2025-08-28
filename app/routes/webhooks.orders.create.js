@@ -22,7 +22,7 @@
 // };
 
 import { json } from "@remix-run/node";
-import { forwardToWebhookSite } from "~/utils/forward.server.js";
+import { forwardToWebhookSite } from "../utils/forwardToWebhookSite.js";
 
 export async function action({ request }) {
   try {

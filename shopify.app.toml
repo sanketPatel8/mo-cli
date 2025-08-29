@@ -2,7 +2,7 @@
 
 client_id = "4ae793f0ac22674c2b78446439aac4ba"
 name = "MyOperator"
-application_url = "https://tape-stat-laugh-looksmart.trycloudflare.com"
+application_url = "https://eos-united-cb-hour.trycloudflare.com"
 embedded = true
 handle = "myoperator-flask01"
 
@@ -37,7 +37,7 @@ api_version = "2025-07"
 scopes = "read_customers,write_customers,read_orders,write_orders,read_products,write_products"
 
 [auth]
-redirect_urls = ["https://tape-stat-laugh-looksmart.trycloudflare.com/auth/callback", "https://tape-stat-laugh-looksmart.trycloudflare.com/auth/shopify/callback", "https://tape-stat-laugh-looksmart.trycloudflare.com/api/auth/callback"]
+redirect_urls = ["https://eos-united-cb-hour.trycloudflare.com/auth/callback", "https://eos-united-cb-hour.trycloudflare.com/auth/shopify/callback", "https://eos-united-cb-hour.trycloudflare.com/api/auth/callback"]
 
 [pos]
 embedded = false

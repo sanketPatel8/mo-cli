@@ -89,7 +89,7 @@ const shopify = shopifyApp({
     },
     ORDERS_UPDATED: {
       deliveryMethod: DeliveryMethod.Http,
-      callbackUrl: "/webhooks/orders/update",
+      callbackUrl: "/webhooks/orders/updated",
     },
     APP_UNINSTALLED: {
       deliveryMethod: DeliveryMethod.Http,

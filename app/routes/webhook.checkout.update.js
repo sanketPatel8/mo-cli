@@ -1,5 +1,5 @@
 import { json } from "@remix-run/node";
-import { shopify } from "../shopify.server";
+import shopify from "../shopify.server";
 import { forwardToWebhookSite } from "../utils/forwardToWebhookSite";
 
 export async function action({ request }) {

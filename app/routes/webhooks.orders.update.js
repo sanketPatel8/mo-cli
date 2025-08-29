@@ -61,7 +61,7 @@ export async function action({ request }) {
     console.log("✅ Order update webhook payload:", payload);
 
     await forwardToWebhookSite({
-      url: "https://webhook.site/53a0792f-2d18-497d-bf6b-d42d7b070a21",
+      url: `${process.env.SHOPIFY_NEXT_URI}/api/shopify/orders`,
       topic,
       shop,
       payload,

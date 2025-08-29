@@ -11,18 +11,6 @@ export async function action({ request }) {
 
     console.log("✅ Order updated webhook payload:", payload);
 
-    // Example: Update order in your database
-    if (payload && payload.id) {
-      const { id, financial_status, fulfillment_status, line_items } = payload;
-
-      await pool.query(
-        `UPDATE orders SET financial_status = ?, fulfillment_status = ?, updated_at = NOW() WHERE shopify_order_id = ?`,
-        [financial_status, fulfillment_status, id],
-      );
-
-      console.log(`📝 Order ${id} updated in DB`);
-    }
-
     // Optional: forward to another service (like your Next.js API)
     await forwardToWebhookSite({
       //   url: `${process.env.SHOPIFY_NEXT_URI}/api/shopify/orders`,

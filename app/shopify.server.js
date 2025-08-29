@@ -95,10 +95,10 @@ const shopify = shopifyApp({
       deliveryMethod: DeliveryMethod.Http,
       callbackUrl: "/webhooks/app/uninstall",
     },
-    CUSTOMERS_CREATE: {
-      deliveryMethod: DeliveryMethod.Http,
-      callbackUrl: "/webhooks/customers/create",
-    },
+    // CUSTOMERS_CREATE: {
+    //   deliveryMethod: DeliveryMethod.Http,
+    //   callbackUrl: "/webhooks/customers/create",
+    // },
   },
 });
 

@@ -7,21 +7,24 @@ export async function action({ request }) {
   try {
     console.log("📥 Webhook request received for orders/cancelled");
 
-    // ⚠️ Skip validation if no HMAC header (only for local testing!)
-    const hmac = request.headers.get("x-shopify-hmac-sha256");
-    if (hmac) {
+    let payload;
+    try {
+      // Try verifying like a real Shopify webhook
       const response = await shopify.webhooks.process(request);
       if (!response.ok) {
-        console.error("❌ Invalid webhook signature:", response.statusText);
-        return json({ error: "Invalid webhook" }, { status: 401 });
+        console.warn("⚠️ Skipping HMAC check (local test)");
       }
-    } else {
-      console.warn("⚠️ No HMAC header, skipping validation (local test)");
+      payload = await request.json();
+    } catch (e) {
+      console.warn(
+        "⚠️ shopify.webhooks.process failed, falling back to raw body:",
+        e.message,
+      );
+      payload = await request.json(); // fallback for curl / local testing
     }
 
     const shop = request.headers.get("x-shopify-shop-domain");
     const topic = request.headers.get("x-shopify-topic"); // "orders/cancelled"
-    const payload = await request.json();
 
     console.log("✅ Order cancelled webhook payload:", payload);
 

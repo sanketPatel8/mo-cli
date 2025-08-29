@@ -75,10 +75,6 @@ const shopify = shopifyApp({
       deliveryMethod: DeliveryMethod.Http,
       callbackUrl: "/webhooks/orders/create",
     },
-    CUSTOMERS_CREATE: {
-      deliveryMethod: DeliveryMethod.Http,
-      callbackUrl: "/webhooks/customers/create",
-    },
     ORDERS_PAID: {
       deliveryMethod: DeliveryMethod.Http,
       callbackUrl: "/webhooks/orders/paid",
@@ -92,12 +88,16 @@ const shopify = shopifyApp({
       callbackUrl: "/webhooks/orders/update",
     },
     ORDERS_CANCELLED: {
-      deliveryMethod: "http",
+      deliveryMethod: DeliveryMethod.Http,
       callbackUrl: "/webhooks/orders/cancelled",
     },
     APP_UNINSTALLED: {
       deliveryMethod: DeliveryMethod.Http,
       callbackUrl: "/webhooks/app/uninstall",
+    },
+    CUSTOMERS_CREATE: {
+      deliveryMethod: DeliveryMethod.Http,
+      callbackUrl: "/webhooks/customers/create",
     },
   },
 });

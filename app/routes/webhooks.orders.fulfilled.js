@@ -8,7 +8,7 @@ export async function action({ request }) {
     const shop = request.headers.get("x-shopify-shop-domain");
     const payload = await request.json();
 
-    console.log("✅ Order fulfilled webhook payload:", payload);
+    console.log("✅ Order fulfilled webhook payload:");
 
     await forwardToWebhookSite({
       url: `${process.env.SHOPIFY_NEXT_URI}/api/shopify/orders`,

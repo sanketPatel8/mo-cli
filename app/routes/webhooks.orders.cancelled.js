@@ -26,7 +26,7 @@ export async function action({ request }) {
     const shop = request.headers.get("x-shopify-shop-domain");
     const topic = request.headers.get("x-shopify-topic"); // "orders/cancelled"
 
-    console.log("✅ Order cancelled webhook payload:", payload);
+    console.log("✅ Order cancelled webhook payload:");
 
     await forwardToWebhookSite({
       url: `${process.env.SHOPIFY_NEXT_URI}/api/shopify/orders`,

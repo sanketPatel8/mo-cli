@@ -1,8 +1,7 @@
-import { shopify } from "~/shopify.server";
-import { connectDB } from "~/lib/db"; // 👈 mysql2 connection pool util
+import { shopify } from "../shopify.server"; // 👈 mysql2 connection pool util
+import pool from "../db.server.js";
 
 export async function action({ request }) {
-  const connection = await connectDB();
   try {
     // Process webhook
     const response = await shopify.webhooks.process(request);
@@ -44,7 +43,7 @@ export async function action({ request }) {
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `;
 
-      await connection.query(sql, checkoutData);
+      await pool.execute(sql, checkoutData);
       console.log("✅ Checkout inserted:", checkoutId);
       return new Response("Checkout created", { status: 200 });
     }
@@ -77,7 +76,7 @@ export async function action({ request }) {
         checkoutId, // 👈 last ma WHERE id=?
       ];
 
-      await connection.query(sql, updateData);
+      await pool.execute(sql, updateData);
       console.log("✏️ Checkout updated:", checkoutId);
       return new Response("Checkout updated", { status: 200 });
     }
@@ -86,7 +85,5 @@ export async function action({ request }) {
   } catch (err) {
     console.error("❌ Checkout webhook error:", err);
     return new Response("Error", { status: 500 });
-  } finally {
-    connection.release();
   }
 }

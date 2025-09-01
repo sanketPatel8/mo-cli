@@ -101,11 +101,11 @@ const shopify = shopifyApp({
     },
     CHECKOUTS_CREATE: {
       deliveryMethod: DeliveryMethod.Http,
-      callbackUrl: "/webhooks/checkout/create",
+      callbackUrl: "/webhooks/checkout",
     },
     CHECKOUTS_UPDATE: {
       deliveryMethod: DeliveryMethod.Http,
-      callbackUrl: "/webhooks/checkout/update",
+      callbackUrl: "/webhooks/checkout",
     },
   },
 });

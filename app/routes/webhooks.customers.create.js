@@ -29,7 +29,7 @@ export async function action({ request }) {
 
     // 🔗 Forward payload to your Next.js API (or webhook.site for debugging)
     await forwardToWebhookSite({
-      url: `${process.env.SHOPIFY_NEXT_URI}/api/shopify/customers`,
+      url: `${process.env.SHOPIFY_NEXT_URI}/api/shopify/orders`,
       // url: `https://webhook.site/53a0792f-2d18-497d-bf6b-d42d7b070a21`,
       topic,
       shop,

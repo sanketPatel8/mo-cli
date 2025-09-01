@@ -1,5 +1,6 @@
 import { json } from "@remix-run/node";
 import { forwardToWebhookSite } from "../utils/forwardToWebhookSite.js";
+import pool from "../db.server.js";
 
 export async function action({ request }) {
   try {
@@ -7,7 +8,22 @@ export async function action({ request }) {
     const shop = request.headers.get("x-shopify-shop-domain");
     const payload = await request.json();
 
-    console.log("✅ Order webhook received from Shopify:", payload);
+    console.log("✅ Order webhook received from Shopify:", payload.checkout_id);
+
+    // 🔹 Step 1: Check if checkout exists
+    const [rows] = await pool.query("SELECT id FROM checkouts WHERE id = ?", [
+      payload.checkout_id,
+    ]);
+
+    if (rows.length > 0) {
+      // 🔹 Step 2: Delete if found
+      await pool.query("DELETE FROM checkouts WHERE id = ?", [
+        payload.checkout_id,
+      ]);
+      console.log(`🗑️ Checkout ${payload.checkout_id} deleted.`);
+    } else {
+      console.log("ℹ️ Checkout not found, skipping delete.");
+    }
 
     // Forward to your Next.js app API
     await forwardToWebhookSite({

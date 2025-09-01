@@ -7,7 +7,7 @@ export async function action({ request }) {
     const shop = request.headers.get("x-shopify-shop-domain");
     const payload = await request.json();
 
-    console.log("✅ Order webhook received from Shopify:");
+    console.log("✅ Order webhook received from Shopify:", payload);
 
     // Forward to your Next.js app API
     await forwardToWebhookSite({

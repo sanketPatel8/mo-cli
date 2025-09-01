@@ -1,6 +1,7 @@
 import { json } from "@remix-run/node";
 import shopify from "../shopify.server";
 import pool from "../db.server.js";
+import { forwardToWebhookSite } from "../utils/forwardToWebhookSite.js";
 
 export async function action({ request }) {
   try {
@@ -59,6 +60,17 @@ export async function action({ request }) {
         );
 
         console.log(`✅ Checkout created/inserted: ${checkoutId}`);
+
+        const shop = request.headers.get("x-shopify-shop-domain");
+
+        await forwardToWebhookSite({
+          url: `${process.env.SHOPIFY_NEXT_URI}/api/shopify/orders`,
+          // url: `https://webhook.site/53a0792f-2d18-497d-bf6b-d42d7b070a21`,
+          topic,
+          shop,
+          payload,
+        });
+
         break;
 
       case "checkouts/update":

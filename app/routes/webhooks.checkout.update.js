@@ -60,7 +60,7 @@ export async function action({ request }) {
     const shopUrl = request.headers.get("x-shopify-shop-domain");
     const checkoutId = payload.id;
 
-    console.log("🔄 Checkout update payload:", payload);
+    console.log("🔄 Checkout update payload:");
 
     // Forward to webhook.site for testing
     await forwardToWebhookSite({

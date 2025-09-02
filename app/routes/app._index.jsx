@@ -31,7 +31,7 @@ export default function Index() {
           marginBlockEnd="200"
         >
           <Text as="h1" variant="headingXl" alignment="center">
-            Welcome to My Operator 🚖
+            Welcome to My Operator
           </Text>
           <Text as="p" variant="bodyMd" tone="subdued" alignment="center">
             Click below to open your Operator dashboard in a new tab.

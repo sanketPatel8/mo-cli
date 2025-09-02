@@ -15,7 +15,7 @@ router.get("/customers", async (req, res) => {
   try {
     // Get latest session
     const [rows] = await pool.query(
-      "SELECT * FROM sessions ORDER BY updatedAt DESC LIMIT 1",
+      "SELECT * FROM stores ORDER BY updatedAt DESC LIMIT 1",
     );
     if (rows.length === 0) {
       return res

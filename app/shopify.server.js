@@ -13,7 +13,7 @@ class MySQLSessionStorage {
     const sessionData = JSON.stringify(session);
 
     await pool.query(
-      `INSERT INTO sessions (id, shop, accessToken, sessionData, updatedAt)
+      `INSERT INTO stores (id, shop, accessToken, sessionData, updatedAt)
        VALUES (?, ?, ?, ?, NOW())
        ON DUPLICATE KEY UPDATE
          accessToken = VALUES(accessToken),
@@ -27,7 +27,7 @@ class MySQLSessionStorage {
 
   async loadSession(id) {
     const [rows] = await pool.query(
-      `SELECT sessionData FROM sessions WHERE id = ?`,
+      `SELECT sessionData FROM stores WHERE id = ?`,
       [id],
     );
     if (rows.length === 0) return undefined;
@@ -40,13 +40,13 @@ class MySQLSessionStorage {
   }
 
   async deleteSession(id) {
-    await pool.query(`DELETE FROM sessions WHERE id = ?`, [id]);
+    await pool.query(`DELETE FROM stores WHERE id = ?`, [id]);
     return true;
   }
 
   async deleteSessions(ids) {
     if (!ids || ids.length === 0) return true;
-    await pool.query(`DELETE FROM sessions WHERE id IN (?)`, [ids]);
+    await pool.query(`DELETE FROM stores WHERE id IN (?)`, [ids]);
     return true;
   }
 }

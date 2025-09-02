@@ -145,7 +145,7 @@ export async function loader() {
   try {
     // 1) Get latest session
     const [rows] = await pool.query(
-      "SELECT * FROM sessions ORDER BY updatedAt DESC LIMIT 1",
+      "SELECT * FROM stores ORDER BY updatedAt DESC LIMIT 1",
     );
 
     if (rows.length === 0) {

@@ -91,9 +91,9 @@ const shopify = shopifyApp({
       deliveryMethod: DeliveryMethod.Http,
       callbackUrl: "/webhooks/orders/cancelled",
     },
-    ORDERS_REFUND: {
+    REFUNDS_CREATE: {
       deliveryMethod: DeliveryMethod.Http,
-      callbackUrl: "/webhooks.orders.refund",
+      callbackUrl: "/webhooks/refunds/create",
     },
     APP_UNINSTALLED: {
       deliveryMethod: DeliveryMethod.Http,

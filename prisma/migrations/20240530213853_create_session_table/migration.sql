@@ -6,7 +6,7 @@ CREATE TABLE "Session" (
     "isOnline" BOOLEAN NOT NULL DEFAULT false,
     "scope" TEXT,
     "expires" DATETIME,
-    "accessToken" TEXT NOT NULL,
+    "access_token" TEXT NOT NULL,
     "userId" BIGINT,
     "firstName" TEXT,
     "lastName" TEXT,

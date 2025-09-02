@@ -13,12 +13,12 @@ class MySQLSessionStorage {
     const sessionData = JSON.stringify(session);
 
     await pool.query(
-      `INSERT INTO stores (id, shop, accessToken, sessionData, updatedAt)
+      `INSERT INTO stores (id, shop, access_token, sessionData, update_at)
        VALUES (?, ?, ?, ?, NOW())
        ON DUPLICATE KEY UPDATE
-         accessToken = VALUES(accessToken),
+         access_token = VALUES(access_token),
          sessionData = VALUES(sessionData),
-         updatedAt = NOW()`,
+         update_at = NOW()`,
       [session.id, session.shop, session.accessToken, sessionData],
     );
 

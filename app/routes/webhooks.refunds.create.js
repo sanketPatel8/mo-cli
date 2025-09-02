@@ -26,70 +26,100 @@
 //   }
 // }
 
-// app/routes/webhooks.refunds.create.js
-
 import { json } from "@remix-run/node";
-import shopify from "../shopify.server.js";
-import { forwardToWebhookSite } from "../utils/forwardToWebhookSite";
-import pool from "../db.server.js";
+
+import { forwardToWebhookSite } from "../utils/forwardToWebhookSite.js";
+
+import crypto from "crypto";
+
+const SHOPIFY_WEBHOOK_SECRET = process.env.SHOPIFY_WEBHOOK_SECRET;
+
+function verifyShopifyWebhook(rawBody, hmacHeader) {
+  if (!hmacHeader || !SHOPIFY_WEBHOOK_SECRET) {
+    console.warn("⚠️ Missing HMAC header or webhook secret");
+
+    return false;
+  }
+
+  const generatedHmac = crypto
+
+    .createHmac("sha256", SHOPIFY_WEBHOOK_SECRET)
+
+    .update(rawBody, "utf8")
+
+    .digest("base64");
+
+  const bufferFromGeneratedHmac = Buffer.from(generatedHmac, "base64");
+
+  const bufferFromHeader = Buffer.from(hmacHeader, "base64");
+
+  if (bufferFromGeneratedHmac.length !== bufferFromHeader.length) {
+    console.warn("⚠️ HMAC length mismatch");
+
+    return false;
+  }
+
+  return crypto.timingSafeEqual(bufferFromGeneratedHmac, bufferFromHeader);
+}
 
 export async function action({ request }) {
   try {
-    console.log("📥 REFUNDS_CREATE webhook received");
+    console.log("📥 ORDERS_REFUND webhook request received");
 
     const shop = request.headers.get("x-shopify-shop-domain");
-    const payload = await request.json();
+
+    const hmacHeader = request.headers.get("x-shopify-hmac-sha256");
+
+    const rawBody = await request.text();
+
+    // Verify HMAC
+
+    if (!verifyShopifyWebhook(rawBody, hmacHeader)) {
+      console.warn("❌ Invalid HMAC signature");
+
+      return json({ error: "Invalid webhook signature" }, { status: 401 });
+    }
+
+    // Parse JSON only after verifying
+
+    const payload = JSON.parse(rawBody);
 
     console.log("↩️ Refund webhook payload:", payload);
 
-    // 1. Get session from DB
-    const [rows] = await pool.query(
-      "SELECT accessToken FROM sessions WHERE shop = ? ORDER BY updatedAt DESC LIMIT 1",
-      [shop],
-    );
+    // Extract customer details
 
-    if (!rows.length) {
-      throw new Error(`No session found for shop: ${shop}`);
-    }
+    const customer = payload.customer
+      ? {
+          id: payload.customer.id,
 
-    const accessToken = rows[0].accessToken;
+          first_name: payload.customer.first_name,
 
-    // 2. Create REST client using session token
-    const client = new shopify.api.clients.Rest({
-      session: {
-        shop,
-        accessToken,
-      },
-    });
+          last_name: payload.customer.last_name,
 
-    // 3. Fetch order details using order_id from webhook payload
-    const orderResponse = await client.get({
-      path: `orders/${payload.order_id}`,
-    });
+          email: payload.customer.email,
 
-    const order = orderResponse.body.order;
-    const customer = order?.customer;
+          phone: payload.customer.phone,
+        }
+      : null;
 
-    // 4. Extract only customer details
-    const customerDetails = {
-      id: customer?.id,
-      name: `${customer?.first_name ?? ""} ${customer?.last_name ?? ""}`.trim(),
-      email: customer?.email,
-      phone: customer?.phone,
-    };
+    console.log("👤 Extracted customer:", customer);
 
-    console.log("👤 Customer details:", customerDetails);
+    // Forward to your app (optional, or handle directly here)
 
     await forwardToWebhookSite({
-      url: `${process.env.SHOPIFY_NEXT_URI}/api/shopify/orders`, // reuse same endpoint
+      url: `${process.env.SHOPIFY_NEXT_URI}/api/shopify/orders`,
+
       topic: "refunds/create",
+
       shop,
-      payload: customerDetails,
+
+      payload: { customer },
     });
 
-    return json({ success: true, customer: customerDetails });
+    return json({ success: true });
   } catch (err) {
-    console.error("❌ Error handling refund webhook:", err);
+    console.error("❌ Error handling refunds/create webhook:", err);
+
     return json({ error: "Webhook failed" }, { status: 500 });
   }
 }

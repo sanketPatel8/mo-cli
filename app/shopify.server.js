@@ -75,10 +75,6 @@ const shopify = shopifyApp({
       deliveryMethod: DeliveryMethod.Http,
       callbackUrl: "/webhooks/orders/create",
     },
-    ORDERS_REFUNDED: {
-      deliveryMethod: DeliveryMethod.Http,
-      callbackUrl: "/webhooks/orders/refunded",
-    },
     ORDERS_PAID: {
       deliveryMethod: DeliveryMethod.Http,
       callbackUrl: "/webhooks/orders/paid",
@@ -94,6 +90,10 @@ const shopify = shopifyApp({
     ORDERS_CANCELLED: {
       deliveryMethod: DeliveryMethod.Http,
       callbackUrl: "/webhooks/orders/cancelled",
+    },
+    ORDERS_REFUND: {
+      deliveryMethod: DeliveryMethod.Http,
+      callbackUrl: "/webhooks/orders/refund",
     },
     APP_UNINSTALLED: {
       deliveryMethod: DeliveryMethod.Http,

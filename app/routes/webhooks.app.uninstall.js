@@ -13,7 +13,6 @@ export async function action({ request }) {
 
     // Delete the shop's session/data from your database
     await pool.query(`DELETE FROM stores WHERE shop = ?`, [shop]);
-    await pool.query(`DELETE FROM shops WHERE shop = ?`, [shop]); // if you store shop info
 
     console.log(`🗑️ Cleaned up data for shop: ${shop}`);
 

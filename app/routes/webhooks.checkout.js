@@ -35,18 +35,16 @@ export async function action({ request }) {
         await pool.execute(
           `
           INSERT IGNORE INTO checkouts (
-            id, token, cart_token, email, created_at, updated_at,
+            id, token, cart_token, email, 
             total_line_items_price, total_tax, subtotal_price, total_price,
             currency, line_items, shipping_lines, tax_lines, shop_url
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `,
           [
             checkoutId,
             payload.token,
             payload.cart_token,
             payload.email,
-            payload.created_at,
-            payload.updated_at,
             payload.total_line_items_price || 0,
             payload.total_tax || 0,
             payload.subtotal_price || 0,

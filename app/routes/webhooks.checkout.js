@@ -27,6 +27,25 @@ export async function action({ request }) {
       return json({ error: "Invalid payload" }, { status: 400 });
     }
 
+    function getISTDateTime() {
+      const now = new Date();
+      const ist = new Date(
+        now.toLocaleString("en-US", { timeZone: "Asia/Kolkata" }),
+      );
+
+      const year = ist.getFullYear();
+      const month = String(ist.getMonth() + 1).padStart(2, "0");
+      const day = String(ist.getDate()).padStart(2, "0");
+      const hours = String(ist.getHours()).padStart(2, "0");
+      const minutes = String(ist.getMinutes()).padStart(2, "0");
+      const seconds = String(ist.getSeconds()).padStart(2, "0");
+
+      return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+    }
+
+    const createdAt = getISTDateTime();
+    const updatedAt = getISTDateTime();
+
     switch (topic) {
       case "checkouts/create":
         console.log("🆕 Handling checkout CREATE:", checkoutId);
@@ -35,16 +54,18 @@ export async function action({ request }) {
         await pool.execute(
           `
           INSERT IGNORE INTO checkouts (
-            id, token, cart_token, email, 
+            id, token, cart_token, email, created_at, updated_at,
             total_line_items_price, total_tax, subtotal_price, total_price,
             currency, line_items, shipping_lines, tax_lines, shop_url
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `,
           [
             checkoutId,
             payload.token,
             payload.cart_token,
             payload.email,
+            createdAt,
+            updatedAt,
             payload.total_line_items_price || 0,
             payload.total_tax || 0,
             payload.subtotal_price || 0,
@@ -78,7 +99,7 @@ export async function action({ request }) {
         await pool.execute(
           `
           UPDATE checkouts SET
-            token = ?, cart_token = ?, email = ?, 
+            token = ?, cart_token = ?, email = ?, created_at = ?, updated_at = ?,
             total_line_items_price = ?, total_tax = ?, subtotal_price = ?, total_price = ?,
             currency = ?, line_items = ?, shipping_lines = ?, tax_lines = ?, shop_url = ?
           WHERE id = ?
@@ -87,6 +108,8 @@ export async function action({ request }) {
             payload.token,
             payload.cart_token,
             payload.email,
+            createdAt,
+            updatedAt,
             payload.total_line_items_price || 0,
             payload.total_tax || 0,
             payload.subtotal_price || 0,

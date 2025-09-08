@@ -21,7 +21,7 @@
 // };
 
 import { json } from "@remix-run/node";
-import pool from "../../db.server"; // your mysql connection
+import pool from "../db.server"; // your mysql connection
 
 export const action = async ({ request }) => {
   try {

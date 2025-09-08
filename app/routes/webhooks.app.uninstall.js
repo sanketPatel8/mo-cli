@@ -61,6 +61,9 @@ export async function action({ request }) {
     await pool.query(`DELETE FROM template_variable WHERE store_id = ?`, [
       storeId,
     ]);
+    await pool.query(`DELETE FROM category_event WHERE store_id = ?`, [
+      storeId,
+    ]);
 
     console.log(`🗑️ Deleted related template data for store_id: ${storeId}`);
 

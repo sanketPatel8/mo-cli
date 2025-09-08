@@ -32,6 +32,8 @@ export const action = async ({ request }) => {
       [shop],
     );
 
+    console.log(rows, "rows");
+
     if (rows.length > 0) {
       const { company_id } = rows[0];
 

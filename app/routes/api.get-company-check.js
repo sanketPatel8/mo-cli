@@ -44,7 +44,7 @@ export const action = async ({ request }) => {
         });
       } else {
         return json({
-          exists: false,
+          exists: true,
           message: "Company ID is null for this shop",
         });
       }

@@ -64,11 +64,12 @@ export const loader = async ({ request }) => {
   await authenticate.admin(request);
   return json({
     SHOPIFY_NEXT_URI: process.env.SHOPIFY_NEXT_URI,
+    SHOPIFY_STAGE_URI: process.env.SHOPIFY_STAGE_URI,
   });
 };
 
 export default function Index() {
-  const { SHOPIFY_NEXT_URI } = useLoaderData();
+  const { SHOPIFY_NEXT_URI, SHOPIFY_STAGE_URI } = useLoaderData();
   const [shop, setShop] = useState(null);
   const [loading, setLoading] = useState(false);
 
@@ -91,10 +92,7 @@ export default function Index() {
 
       if (data.exists) {
         if (data.company_id) {
-          window.open(
-            `https://in.app.myoperator-stage.co/ecomm-plus`,
-            "_blank",
-          );
+          window.open(`${SHOPIFY_STAGE_URI}/ecomm-plus`, "_blank");
         } else {
           window.open(`${SHOPIFY_NEXT_URI}?shop=${shop}`, "_blank");
         }

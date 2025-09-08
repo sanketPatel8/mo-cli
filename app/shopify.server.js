@@ -39,16 +39,16 @@ class MySQLSessionStorage {
     return session;
   }
 
-  async deleteSession(id) {
-    await pool.query(`DELETE FROM stores WHERE id = ?`, [id]);
-    return true;
-  }
+  // async deleteSession(id) {
+  //   await pool.query(`DELETE FROM stores WHERE id = ?`, [id]);
+  //   return true;
+  // }
 
-  async deleteSessions(ids) {
-    if (!ids || ids.length === 0) return true;
-    await pool.query(`DELETE FROM stores WHERE id IN (?)`, [ids]);
-    return true;
-  }
+  // async deleteSessions(ids) {
+  //   if (!ids || ids.length === 0) return true;
+  //   await pool.query(`DELETE FROM stores WHERE id IN (?)`, [ids]);
+  //   return true;
+  // }
 }
 
 // ✅ Shopify config

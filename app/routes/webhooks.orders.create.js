@@ -64,6 +64,23 @@ export async function action({ request }) {
   );
 
   try {
+    // ✅ Respond immediately so Shopify doesn’t retry
+    const response = json({ success: true });
+
+    // 🔄 Forward webhook asynchronously
+    (async () => {
+      try {
+        await forwardToWebhookSite({
+          url: `${process.env.SHOPIFY_NEXT_URI}/api/shopify/orders`,
+          topic,
+          shop,
+          payload,
+        });
+        console.log(`📤 Forwarded [${topic}] webhook → Next.js API`);
+      } catch (fwdErr) {
+        console.error("❌ Forwarding failed:", fwdErr);
+      }
+    })();
     if (orderId) {
       // 🔹 Step 1: Check if order exists
       const [rows] = await pool.query("SELECT id FROM orders WHERE id = ?", [
@@ -94,24 +111,6 @@ export async function action({ request }) {
     } else {
       console.warn("⚠️ No order.id in payload, skipping DB insert.");
     }
-
-    // ✅ Respond immediately so Shopify doesn’t retry
-    const response = json({ success: true });
-
-    // 🔄 Forward webhook asynchronously
-    (async () => {
-      try {
-        await forwardToWebhookSite({
-          url: `${process.env.SHOPIFY_NEXT_URI}/api/shopify/orders`,
-          topic,
-          shop,
-          payload,
-        });
-        console.log(`📤 Forwarded [${topic}] webhook → Next.js API`);
-      } catch (fwdErr) {
-        console.error("❌ Forwarding failed:", fwdErr);
-      }
-    })();
 
     return response;
   } catch (err) {

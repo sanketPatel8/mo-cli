@@ -42,66 +42,82 @@
 //   }
 // }
 
-// app/routes/webhooks.orders.update.js
 import { json } from "@remix-run/node";
 import { forwardToWebhookSite } from "../utils/forwardToWebhookSite.js";
+import pool from "../db.server.js";
 import shopify from "../shopify.server.js";
 
-// Simple in-memory cache (for production, use DB/Redis)
-const processedUpdates = new Set();
-
 export async function action({ request }) {
+  console.log("📥 Webhook request received for orders/updated");
+
+  const shop = request.headers.get("x-shopify-shop-domain");
+  const topic = request.headers.get("x-shopify-topic"); // "orders/updated"
+
+  let payload = {};
   try {
-    console.log("📥 Webhook request received for orders/updated");
-
-    let payload;
+    const response = await shopify.webhooks.process(request);
+    if (!response.ok) console.warn("⚠️ Skipping HMAC check (local/dev)");
+    payload = await request.json(); // ✅ single read
+  } catch (err) {
+    console.warn(
+      "⚠️ shopify.webhooks.process failed, falling back to raw body:",
+      err.message,
+    );
     try {
-      const response = await shopify.webhooks.process(request);
-      if (!response.ok) {
-        console.warn("⚠️ Skipping HMAC check (local/dev)");
-      }
       payload = await request.json();
-    } catch (e) {
-      console.warn(
-        "⚠️ shopify.webhooks.process failed, falling back to raw body:",
-        e.message,
-      );
-      payload = await request.json();
-    }
-
-    const shop = request.headers.get("x-shopify-shop-domain");
-    const topic = request.headers.get("x-shopify-topic"); // should be "orders/updated"
-
-    const orderId = payload?.id;
-    const updatedAt = payload?.updated_at;
-
-    if (!orderId) {
-      console.warn("⚠️ Missing order ID in payload, skipping.");
+    } catch {
+      console.error("❌ Invalid payload");
       return json({ error: "Invalid payload" }, { status: 400 });
     }
-
-    // ✅ Deduplication key = orderId + updatedAt
-    const dedupeKey = `${orderId}-${updatedAt}`;
-    if (processedUpdates.has(dedupeKey)) {
-      console.log(
-        `⏭️ Skipping duplicate update for order ${orderId} (${updatedAt})`,
-      );
-      return json({ success: true, duplicate: true });
-    }
-    processedUpdates.add(dedupeKey);
-
-    console.log(`✅ Forwarding order update for ${orderId} (${updatedAt})`);
-
-    await forwardToWebhookSite({
-      url: `${process.env.SHOPIFY_NEXT_URI}/api/shopify/orders`,
-      topic,
-      shop,
-      payload,
-    });
-
-    return json({ success: true });
-  } catch (err) {
-    console.error("🔥 Error handling orders/updated webhook:", err);
-    return json({ error: "Webhook failed" }, { status: 500 });
   }
+
+  const orderId = payload?.id;
+  const updatedAt = payload?.updated_at;
+
+  if (!orderId) {
+    console.warn("⚠️ Missing order ID in payload, skipping.");
+    return json({ error: "Invalid payload" }, { status: 400 });
+  }
+
+  // 🔴 Immediate 200 response to Shopify
+  const responseObj = json({ success: true });
+
+  // 🔄 Background async task
+  (async () => {
+    try {
+      // ✅ Idempotency using webhook_id
+      const webhookId =
+        request.headers.get("x-shopify-webhook-id") ||
+        `${orderId}-${updatedAt}`;
+      if (webhookId) {
+        const [exists] = await pool.query(
+          `SELECT id FROM processed_webhooks WHERE webhook_id = ?`,
+          [webhookId],
+        );
+        if (exists.length) {
+          console.log(`🔁 Duplicate webhook skipped: ${webhookId}`);
+          return;
+        }
+        await pool.query(
+          `INSERT INTO processed_webhooks (webhook_id, topic, shop, created_at) VALUES (?, ?, ?, NOW())`,
+          [webhookId, topic, shop],
+        );
+      }
+
+      console.log(`✅ Forwarding order update for ${orderId} (${updatedAt})`);
+
+      await forwardToWebhookSite({
+        url: `${process.env.SHOPIFY_NEXT_URI}/api/shopify/orders`,
+        topic,
+        shop,
+        payload,
+      });
+
+      console.log("📤 Forwarded orders/updated webhook successfully");
+    } catch (err) {
+      console.error("🔥 Error in background orders/updated task:", err);
+    }
+  })();
+
+  return responseObj;
 }

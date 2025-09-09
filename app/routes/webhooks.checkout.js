@@ -148,13 +148,11 @@ export async function action({ request }) {
 
   console.log(`📥 Webhook received: ${topic}`);
 
-  let payload;
+  let payload = {};
   try {
-    // ✅ Validate webhook (HMAC check)
     const response = await shopify.webhooks.process(request);
     if (!response.ok) console.warn("⚠️ Skipping HMAC check (local/dev)");
 
-    // Parse body
     payload = await request.json();
   } catch (err) {
     console.warn("⚠️ shopify.webhooks.process failed:", err.message);
@@ -172,12 +170,32 @@ export async function action({ request }) {
     return json({ error: "Invalid payload" }, { status: 400 });
   }
 
-  // 🔴 Return success to Shopify immediately → stops retries
-  const response = json({ success: true });
+  // 🔴 Immediate 200 response to Shopify
+  const responseObj = json({ success: true });
 
-  // 🔄 Background async task (fire & forget)
+  // 🔄 Background async task
   (async () => {
     try {
+      // ✅ Idempotency check using webhook_id
+      const webhookId = request.headers.get("x-shopify-webhook-id");
+      if (webhookId) {
+        const [exists] = await pool.query(
+          `SELECT id FROM processed_webhooks WHERE webhook_id = ?`,
+          [webhookId],
+        );
+        if (exists.length) {
+          console.log(`🔁 Duplicate webhook skipped: ${webhookId}`);
+          return;
+        }
+
+        await pool.query(
+          `INSERT INTO processed_webhooks (webhook_id, topic, shop, created_at) VALUES (?, ?, ?, NOW())`,
+          [webhookId, topic, shopUrl],
+        );
+      } else {
+        console.warn("⚠️ No webhook id found, cannot ensure idempotency");
+      }
+
       function getISTDateTime() {
         const now = new Date();
         const ist = new Date(
@@ -199,7 +217,6 @@ export async function action({ request }) {
         case "checkouts/create":
           console.log("🆕 Handling checkout CREATE:", checkoutId);
 
-          // Insert or ignore duplicate
           await pool.execute(
             `
             INSERT IGNORE INTO checkouts (
@@ -229,7 +246,6 @@ export async function action({ request }) {
 
           console.log(`✅ Checkout inserted: ${checkoutId}`);
 
-          // Forward to Next.js API (fire & forget)
           await forwardToWebhookSite({
             url: `${process.env.SHOPIFY_NEXT_URI}/api/shopify/orders`,
             topic,
@@ -279,5 +295,5 @@ export async function action({ request }) {
     }
   })();
 
-  return response;
+  return responseObj;
 }

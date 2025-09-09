@@ -45,18 +45,20 @@
 
 import { json } from "@remix-run/node";
 import shopify from "../shopify.server"; // adjust path if different
-import { forwardToWebhookSite } from "../utils/forwardToWebhookSite"; // adjust path if you have helper
+import pool from "../db.server.js";
+import { forwardToWebhookSite } from "../utils/forwardToWebhookSite";
 
 export async function action({ request }) {
   console.log("📥 Webhook request received for customers/create");
 
-  let payload;
+  const shop = request.headers.get("x-shopify-shop-domain");
+  const topic = request.headers.get("x-shopify-topic"); // "customers/create"
+  let payload = {};
+
   try {
     // ✅ Verify webhook (HMAC check)
     const response = await shopify.webhooks.process(request);
-    if (!response.ok) {
-      console.warn("⚠️ Skipping HMAC check (local/dev)");
-    }
+    if (!response.ok) console.warn("⚠️ Skipping HMAC check (local/dev)");
     payload = await request.json();
   } catch (e) {
     console.warn(
@@ -71,29 +73,43 @@ export async function action({ request }) {
     }
   }
 
-  const shop = request.headers.get("x-shopify-shop-domain");
-  const topic = request.headers.get("x-shopify-topic"); // "customers/create"
+  // 🔴 Immediate 200 response
+  const responseObj = json({ success: true });
 
-  console.log("✅ Customer created webhook payload:", payload);
-
-  // 🔴 Return response to Shopify immediately → prevents retries
-  const response = json({ success: true });
-
-  // 🔄 Fire-and-forget forwarding
+  // 🔄 Background processing
   (async () => {
     try {
+      // ✅ Idempotency check using webhook_id
+      const webhookId = request.headers.get("x-shopify-webhook-id");
+      if (webhookId) {
+        const [exists] = await pool.query(
+          `SELECT id FROM processed_webhooks WHERE webhook_id = ?`,
+          [webhookId],
+        );
+        if (exists.length) {
+          console.log(`🔁 Duplicate webhook skipped: ${webhookId}`);
+          return;
+        }
+        await pool.query(
+          `INSERT INTO processed_webhooks (webhook_id, topic, shop, created_at) VALUES (?, ?, ?, NOW())`,
+          [webhookId, topic, shop],
+        );
+      } else {
+        console.warn("⚠️ No webhook id found, cannot ensure idempotency");
+      }
+
+      // Optional: Forward payload to another service
       await forwardToWebhookSite({
         url: `${process.env.SHOPIFY_NEXT_URI}/api/shopify/orders`,
-        // url: `https://webhook.site/53a0792f-2d18-497d-bf6b-d42d7b070a21`,
         topic,
         shop,
         payload,
       });
       console.log("📤 Forwarded customers/create webhook successfully");
     } catch (err) {
-      console.error("🔥 Forwarding customers/create webhook failed:", err);
+      console.error("🔥 Error handling customers/create webhook:", err);
     }
   })();
 
-  return response;
+  return responseObj;
 }

@@ -81,35 +81,27 @@ export async function action({ request }) {
         console.error("❌ Forwarding failed:", fwdErr);
       }
     })();
+
     if (orderId) {
       // 🔹 Step 1: Check if order exists
-      const [rows] = await pool.query("SELECT id FROM orders WHERE id = ?", [
-        orderId,
-      ]);
 
-      if (rows.length === 0) {
-        // 🔹 Step 2: Insert new order
-        await pool.query(
-          `INSERT INTO orders 
-            (id, email, total_price, currency, created_at, updated_at, shop_url, raw_payload) 
-          VALUES (?, ?, ?, ?, NOW(), NOW(), ?, ?)`,
-          [
-            orderId,
-            payload.email || null,
-            payload.total_price || 0,
-            payload.currency || "USD",
-            shop,
-            JSON.stringify(payload),
-          ],
-        );
-        console.log(`✅ Order ${orderId} inserted for shop ${shop}`);
-      } else {
-        console.log(
-          `ℹ️ Order ${orderId} already exists in DB, skipping insert.`,
-        );
-      }
+      pool.query(
+        `INSERT INTO orders 
+    (id, email, total_price, currency, created_at, updated_at, shop_url, raw_payload)
+   VALUES (?, ?, ?, ?, NOW(), NOW(), ?, ?)
+   ON DUPLICATE KEY UPDATE updated_at = NOW()`,
+        [
+          orderId,
+          payload.email || null,
+          payload.total_price || 0,
+          payload.currency || "USD",
+          shop,
+          JSON.stringify(payload),
+        ],
+      );
+      console.log(`✅ Order ${orderId} inserted for shop ${shop}`);
     } else {
-      console.warn("⚠️ No order.id in payload, skipping DB insert.");
+      console.log(`ℹ️ Order ${orderId} already exists in DB, skipping insert.`);
     }
 
     return response;

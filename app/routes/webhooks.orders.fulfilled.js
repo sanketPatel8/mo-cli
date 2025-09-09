@@ -45,28 +45,23 @@ export async function action({ request }) {
     `📥 Webhook received [${topic}] from ${shop}, order_id=${orderId}`,
   );
 
-  try {
-    // ✅ Respond immediately so Shopify doesn’t retry
-    const response = json({ success: true });
+  // ✅ Respond immediately so Shopify doesn’t retry
+  const response = json({ success: true });
 
-    // 🔄 Forward asynchronously (non-blocking)
-    (async () => {
-      try {
-        await forwardToWebhookSite({
-          url: `${process.env.SHOPIFY_NEXT_URI}/api/shopify/orders`,
-          topic,
-          shop,
-          payload,
-        });
-        console.log(`📤 Forwarded [${topic}] webhook → Next.js API`);
-      } catch (fwdErr) {
-        console.error("❌ Forwarding failed:", fwdErr);
-      }
-    })();
+  // 🔄 Forward asynchronously (non-blocking)
+  (async () => {
+    try {
+      await forwardToWebhookSite({
+        url: `${process.env.SHOPIFY_NEXT_URI}/api/shopify/orders`,
+        topic,
+        shop,
+        payload,
+      });
+      console.log(`📤 Forwarded [${topic}] webhook → Next.js API`);
+    } catch (fwdErr) {
+      console.error("❌ Forwarding failed:", fwdErr);
+    }
+  })();
 
-    return response;
-  } catch (err) {
-    console.error("🔥 Error handling orders/fulfilled webhook:", err);
-    return json({ error: "Webhook failed" }, { status: 500 });
-  }
+  return response;
 }

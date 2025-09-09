@@ -1,5 +1,5 @@
 import { json } from "@remix-run/node";
-import { forwardToWebhookSite } from "../../utils/forwardToWebhookSite.js";
+import { forwardToWebhookSite } from "../utils/forwardToWebhookSite";
 
 export async function action({ request }) {
   const topic = request.headers.get("x-shopify-topic"); // should be "fulfillments/update"

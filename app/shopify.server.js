@@ -107,6 +107,10 @@ const shopify = shopifyApp({
       deliveryMethod: DeliveryMethod.Http,
       callbackUrl: "/webhooks/checkout",
     },
+    ORDERS_FULFILLMENT_UPDATE: {
+      deliveryMethod: DeliveryMethod.Http,
+      callbackUrl: "/webhooks/orders/delivery-status",
+    },
   },
 });
 

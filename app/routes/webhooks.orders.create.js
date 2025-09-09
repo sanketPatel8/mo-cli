@@ -24,19 +24,17 @@ export async function action({ request }) {
     const response = json({ success: true });
 
     // 🔄 Forward webhook asynchronously
-    (async () => {
-      try {
-        await forwardToWebhookSite({
-          url: `${process.env.SHOPIFY_NEXT_URI}/api/shopify/orders`,
-          topic,
-          shop,
-          payload,
-        });
-        console.log(`📤 Forwarded [${topic}] webhook → Next.js API`);
-      } catch (fwdErr) {
-        console.error("❌ Forwarding failed:", fwdErr);
-      }
-    })();
+    try {
+      await forwardToWebhookSite({
+        url: `${process.env.SHOPIFY_NEXT_URI}/api/shopify/orders`,
+        topic,
+        shop,
+        payload,
+      });
+      console.log(`📤 Forwarded [${topic}] webhook → Next.js API`);
+    } catch (fwdErr) {
+      console.error("❌ Forwarding failed:", fwdErr);
+    }
 
     if (orderId) {
       // 🔹 Step 1: Check if order exists

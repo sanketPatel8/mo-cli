@@ -50,19 +50,17 @@ export async function action({ request }) {
     const response = json({ success: true });
 
     // 🔄 Forward asynchronously (non-blocking)
-    (async () => {
-      try {
-        await forwardToWebhookSite({
-          url: `${process.env.SHOPIFY_NEXT_URI}/api/shopify/orders`,
-          topic,
-          shop,
-          payload,
-        });
-        console.log(`📤 Forwarded [${topic}] webhook → Next.js API`);
-      } catch (fwdErr) {
-        console.error("❌ Forwarding failed:", fwdErr);
-      }
-    })();
+    try {
+      await forwardToWebhookSite({
+        url: `${process.env.SHOPIFY_NEXT_URI}/api/shopify/orders`,
+        topic,
+        shop,
+        payload,
+      });
+      console.log(`📤 Forwarded [${topic}] webhook → Next.js API`);
+    } catch (fwdErr) {
+      console.error("❌ Forwarding failed:", fwdErr);
+    }
 
     return response;
   } catch (err) {

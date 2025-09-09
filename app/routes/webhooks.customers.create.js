@@ -83,21 +83,19 @@ export async function action({ request }) {
     const responseObj = json({ success: true });
 
     // 🔄 Process asynchronously (non-blocking)
-    (async () => {
-      try {
-        await forwardToWebhookSite({
-          url: `${process.env.SHOPIFY_NEXT_URI}/api/shopify/customers`,
-          // Or use webhook.site for debugging:
-          // url: "https://webhook.site/53a0792f-2d18-497d-bf6b-d42d7b070a21",
-          topic,
-          shop,
-          payload,
-        });
-        console.log("📤 Forwarded customers/create → Next.js API");
-      } catch (forwardErr) {
-        console.error("❌ Forwarding error:", forwardErr);
-      }
-    })();
+    try {
+      await forwardToWebhookSite({
+        url: `${process.env.SHOPIFY_NEXT_URI}/api/shopify/customers`,
+        // Or use webhook.site for debugging:
+        // url: "https://webhook.site/53a0792f-2d18-497d-bf6b-d42d7b070a21",
+        topic,
+        shop,
+        payload,
+      });
+      console.log("📤 Forwarded customers/create → Next.js API");
+    } catch (forwardErr) {
+      console.error("❌ Forwarding error:", forwardErr);
+    }
 
     return responseObj;
   } catch (err) {

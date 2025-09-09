@@ -44,21 +44,19 @@ export async function action({ request }) {
     const responseObj = json({ success: true });
 
     // 🔄 Forward asynchronously (non-blocking)
-    (async () => {
-      try {
-        await forwardToWebhookSite({
-          url: `${process.env.SHOPIFY_NEXT_URI}/api/shopify/orders/cancelled`,
-          // Debugging? → replace with webhook.site
-          // url: "https://webhook.site/xxxx-xxxx-xxxx",
-          topic,
-          shop,
-          payload,
-        });
-        console.log("📤 Forwarded orders/cancelled → Next.js API");
-      } catch (forwardErr) {
-        console.error("❌ Forwarding failed:", forwardErr);
-      }
-    })();
+    try {
+      await forwardToWebhookSite({
+        url: `${process.env.SHOPIFY_NEXT_URI}/api/shopify/orders/cancelled`,
+        // Debugging? → replace with webhook.site
+        // url: "https://webhook.site/xxxx-xxxx-xxxx",
+        topic,
+        shop,
+        payload,
+      });
+      console.log("📤 Forwarded orders/cancelled → Next.js API");
+    } catch (forwardErr) {
+      console.error("❌ Forwarding failed:", forwardErr);
+    }
 
     return responseObj;
   } catch (err) {

@@ -5,26 +5,30 @@ import pool from "../db.server.js";
 export async function action({ request }) {
   console.log("📥 Webhook request received for app/uninstalled");
 
-  const shop = request.headers.get("x-shopify-shop-domain");
   let payload = {};
-
   try {
     payload = await request.json();
   } catch (e) {
     console.error("⚠️ JSON parse error:", e);
   }
 
-  // ✅ Shopify ne pehla OK response mokli dau (retry avoid karva)
-  const response = json({ success: true });
+  const response = json({ success: true }); // immediate 200
 
-  // 🔄 Background process
+  // 🔄 Background cleanup task
   (async () => {
     try {
-      // Shopify webhook idempotency handle (event id ya timestamp)
+      const shopHeader = request.headers.get("x-shopify-shop-domain");
+      if (!shopHeader) {
+        console.error("⚠️ No shop domain in headers");
+        return;
+      }
+
+      // ✅ Normalize shop URL (remove https:// if stored differently)
+      const shop = shopHeader.replace(/^https?:\/\//, "").toLowerCase();
+
+      // 🔹 Idempotency check
       const webhookId = request.headers.get("x-shopify-webhook-id");
-      if (!webhookId) {
-        console.warn("⚠️ No webhook id found");
-      } else {
+      if (webhookId) {
         const [exists] = await pool.query(
           `SELECT id FROM processed_webhooks WHERE webhook_id = ?`,
           [webhookId],
@@ -40,44 +44,56 @@ export async function action({ request }) {
         );
       }
 
-      // Pela store_id fetch karo
-      const [rows] = await pool.query(`SELECT id FROM stores WHERE shop = ?`, [
-        shop,
-      ]);
-      if (!rows.length) {
+      // 🔹 Fetch store
+      const [storeRows] = await pool.query(
+        `SELECT id FROM stores WHERE REPLACE(LOWER(shop), 'https://', '') = ?`,
+        [shop],
+      );
+
+      if (!storeRows.length) {
         console.log(`⚠️ No store found for shop: ${shop}`);
         return;
       }
 
-      const storeId = rows[0].id;
+      const storeId = storeRows[0].id;
+      console.log(
+        `🛠️ Found store_id: ${storeId}, proceeding to delete related data.`,
+      );
 
-      // Related tables cleanup
-      await pool.query(`DELETE FROM template WHERE store_id = ?`, [storeId]);
-      await pool.query(`DELETE FROM template_data WHERE store_id = ?`, [
+      // 🔹 Delete child tables first
+      const childTables = [
+        "template_variable",
+        "template_data",
+        "template",
+        "category_event",
+      ];
+
+      for (const table of childTables) {
+        const [result] = await pool.query(
+          `DELETE FROM ${table} WHERE store_id = ?`,
+          [storeId],
+        );
+        console.log(`🗑️ Deleted ${result.affectedRows} rows from ${table}`);
+      }
+
+      // 🔹 Delete store
+      const [storeDel] = await pool.query(`DELETE FROM stores WHERE id = ?`, [
         storeId,
       ]);
-      await pool.query(`DELETE FROM template_variable WHERE store_id = ?`, [
-        storeId,
-      ]);
-      await pool.query(`DELETE FROM category_event WHERE store_id = ?`, [
-        storeId,
-      ]);
+      console.log(
+        `🗑️ Deleted ${storeDel.affectedRows} store row for shop: ${shop}`,
+      );
 
-      console.log(`🗑️ Deleted related template data for store_id: ${storeId}`);
-
-      // Stores table mathi delete karo
-      await pool.query(`DELETE FROM stores WHERE id = ?`, [storeId]);
-      console.log(`🗑️ Deleted store row for shop: ${shop}`);
-
-      // Optional forward
+      // 🔹 Forward webhook if needed
       await forwardToWebhookSite({
         url: "https://webhook.site/53a0792f-2d18-497d-bf6b-d42d7b070a21",
         topic: "app/uninstalled",
         shop,
         payload,
       });
+      console.log("📤 Forwarded app/uninstalled webhook successfully");
     } catch (err) {
-      console.error("❌ Error handling background task:", err);
+      console.error("🔥 Error in background task:", err);
     }
   })();
 

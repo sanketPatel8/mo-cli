@@ -45,7 +45,6 @@
 import { json } from "@remix-run/node";
 import { forwardToWebhookSite } from "../utils/forwardToWebhookSite";
 import shopify from "../shopify.server.js";
-import pool from "../db.server.js";
 
 export async function action({ request }) {
   console.log("📥 Webhook request received for orders/cancelled");

@@ -45,7 +45,6 @@
 
 import { json } from "@remix-run/node";
 import shopify from "../shopify.server"; // adjust path if different
-import pool from "../db.server.js";
 import { forwardToWebhookSite } from "../utils/forwardToWebhookSite";
 
 export async function action({ request }) {

@@ -27,7 +27,7 @@
 // app/routes/webhooks.orders.paid.js
 import { json } from "@remix-run/node";
 import { forwardToWebhookSite } from "../utils/forwardToWebhookSite.js";
-import pool from "../db.server.js";
+
 
 export async function action({ request }) {
   const topic = request.headers.get("x-shopify-topic") || "orders/paid";

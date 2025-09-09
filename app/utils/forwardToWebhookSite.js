@@ -1,33 +1,33 @@
-export async function forwardToWebhookSite({ url, topic, shop, payload }) {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 6000);
+// export async function forwardToWebhookSite({ url, topic, shop, payload }) {
+//   const controller = new AbortController();
+//   const timeout = setTimeout(() => controller.abort(), 6000);
 
-  try {
-    const res = await fetch(url, {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-        "x-source": "shopify-remix",
-        "x-shopify-topic": topic,
-        "x-shop": shop,
-      },
-      body: JSON.stringify(payload),
-      signal: controller.signal,
-    });
+//   try {
+//     const res = await fetch(url, {
+//       method: "POST",
+//       headers: {
+//         "content-type": "application/json",
+//         "x-source": "shopify-remix",
+//         "x-shopify-topic": topic,
+//         "x-shop": shop,
+//       },
+//       body: JSON.stringify(payload),
+//       signal: controller.signal,
+//     });
 
-    if (!res.ok) {
-      console.error(`Forwarding failed: ${res.status} ${res.statusText}`);
-      return { success: false, status: res.status, statusText: res.statusText };
-    }
+//     if (!res.ok) {
+//       console.error(`Forwarding failed: ${res.status} ${res.statusText}`);
+//       return { success: false, status: res.status, statusText: res.statusText };
+//     }
 
-    return { success: true, status: res.status };
-  } catch (err) {
-    console.error("Forwarding error:", err);
-    return { success: false, error: err.message };
-  } finally {
-    clearTimeout(timeout);
-  }
-}
+//     return { success: true, status: res.status };
+//   } catch (err) {
+//     console.error("Forwarding error:", err);
+//     return { success: false, error: err.message };
+//   } finally {
+//     clearTimeout(timeout);
+//   }
+// }
 
 // export async function forwardToWebhookSite({
 //   url,
@@ -79,3 +79,40 @@ export async function forwardToWebhookSite({ url, topic, shop, payload }) {
 //     clearTimeout(timeout);
 //   }
 // }
+
+export async function forwardToWebhookSite({ url, topic, shop, payload }) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 6000);
+
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "x-source": "shopify-remix",
+        "x-shopify-topic": topic,
+        "x-shop": shop,
+      },
+      body: JSON.stringify(payload),
+      signal: controller.signal,
+    });
+
+    if (!res.ok) {
+      const text = await res.text(); // 👈 log the real error
+      console.error(`Forwarding failed: ${res.status} ${res.statusText}`, text);
+      return {
+        success: false,
+        status: res.status,
+        statusText: res.statusText,
+        body: text,
+      };
+    }
+
+    return { success: true, status: res.status };
+  } catch (err) {
+    console.error("Forwarding error:", err);
+    return { success: false, error: err.message };
+  } finally {
+    clearTimeout(timeout);
+  }
+}

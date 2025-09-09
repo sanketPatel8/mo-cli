@@ -111,6 +111,10 @@ const shopify = shopifyApp({
       deliveryMethod: DeliveryMethod.Http,
       callbackUrl: "/webhooks/orders/delivery-status",
     },
+    FULFILLMENT_EVENTS_CREATE: {
+      deliveryMethod: DeliveryMethod.Http,
+      callbackUrl: "/webhooks/fulfillment/create",
+    },
   },
 });
 

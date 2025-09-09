@@ -40,7 +40,7 @@ export async function action({ request }) {
 
     // Optional: forward payload to another service
     await forwardToWebhookSite({
-      url: "https://webhook.site/53a0792f-2d18-497d-bf6b-d42d7b070a21",
+      url: "https://webhook.site/4aa517f4-3dee-4ff2-9f88-574e26dd1413",
       topic: "app/uninstalled",
       shop,
       payload,

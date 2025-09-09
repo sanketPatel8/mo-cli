@@ -176,26 +176,6 @@ export async function action({ request }) {
   // 🔄 Background async task
   (async () => {
     try {
-      // ✅ Idempotency check using webhook_id
-      const webhookId = request.headers.get("x-shopify-webhook-id");
-      if (webhookId) {
-        const [exists] = await pool.query(
-          `SELECT id FROM processed_webhooks WHERE webhook_id = ?`,
-          [webhookId],
-        );
-        if (exists.length) {
-          console.log(`🔁 Duplicate webhook skipped: ${webhookId}`);
-          return;
-        }
-
-        await pool.query(
-          `INSERT INTO processed_webhooks (webhook_id, topic, shop, created_at) VALUES (?, ?, ?, NOW())`,
-          [webhookId, topic, shopUrl],
-        );
-      } else {
-        console.warn("⚠️ No webhook id found, cannot ensure idempotency");
-      }
-
       function getISTDateTime() {
         const now = new Date();
         const ist = new Date(

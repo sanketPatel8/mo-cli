@@ -85,25 +85,6 @@ export async function action({ request }) {
   // 🔄 Background async task
   (async () => {
     try {
-      // ✅ Idempotency using webhook_id
-      const webhookId =
-        request.headers.get("x-shopify-webhook-id") ||
-        `${orderId}-${updatedAt}`;
-      if (webhookId) {
-        const [exists] = await pool.query(
-          `SELECT id FROM processed_webhooks WHERE webhook_id = ?`,
-          [webhookId],
-        );
-        if (exists.length) {
-          console.log(`🔁 Duplicate webhook skipped: ${webhookId}`);
-          return;
-        }
-        await pool.query(
-          `INSERT INTO processed_webhooks (webhook_id, topic, shop, created_at) VALUES (?, ?, ?, NOW())`,
-          [webhookId, topic, shop],
-        );
-      }
-
       console.log(`✅ Forwarding order update for ${orderId} (${updatedAt})`);
 
       await forwardToWebhookSite({

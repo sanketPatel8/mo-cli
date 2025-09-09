@@ -65,26 +65,6 @@ export async function action({ request }) {
   // 🔄 Background async task
   (async () => {
     try {
-      // ✅ Idempotency check
-      const webhookId = request.headers.get("x-shopify-webhook-id");
-      if (webhookId) {
-        const [exists] = await pool.query(
-          `SELECT id FROM processed_webhooks WHERE webhook_id = ?`,
-          [webhookId],
-        );
-        if (exists.length) {
-          console.log(`🔁 Duplicate webhook skipped: ${webhookId}`);
-          return;
-        }
-
-        await pool.query(
-          `INSERT INTO processed_webhooks (webhook_id, topic, shop, created_at) VALUES (?, ?, ?, NOW())`,
-          [webhookId, topic, shop],
-        );
-      } else {
-        console.warn("⚠️ No webhook id found, cannot ensure idempotency");
-      }
-
       // ✅ Handle checkout deletion for cancelled orders
       if (topic === "orders/cancelled" && payload.checkout_id) {
         console.log("🔍 Checking checkout in DB:", payload.checkout_id);

@@ -1,6 +1,6 @@
-// app/routes/webhooks.orders.delivery-status.js
 import { json } from "@remix-run/node";
 import { forwardToWebhookSite } from "../utils/forwardToWebhookSite.js";
+import pool from "../db.server.js"; // MySQL pool
 
 export async function action({ request }) {
   const topic = request.headers.get("x-shopify-topic"); // should be "orders/delivery-status"
@@ -26,15 +26,35 @@ export async function action({ request }) {
   // ✅ Respond immediately to Shopify to prevent retries
   const response = json({ success: true });
 
+  // 🔹 Check last saved delivery status
+  const [rows] = await pool.query(
+    "SELECT delivery_status FROM orders WHERE id = ?",
+    [orderId],
+  );
+  const lastStatus = rows[0]?.delivery_status;
+
+  if (lastStatus === deliveryStatus) {
+    console.log(
+      `ℹ️ Delivery status unchanged (${deliveryStatus}) — skipping forward.`,
+    );
+    return response; // Skip forwarding if no change
+  }
+
+  // 🔹 Save new delivery status
+  await pool.query("UPDATE orders SET delivery_status = ? WHERE id = ?", [
+    deliveryStatus,
+    orderId,
+  ]);
+
   // 🔄 Forward asynchronously to your internal API
   try {
     await forwardToWebhookSite({
-      url: `https://webhook.site/4aa517f4-3dee-4ff2-9f88-574e26dd1413`, // Replace with your actual endpoint
+      url: "https://webhook.site/4aa517f4-3dee-4ff2-9f88-574e26dd1413", // Replace with your endpoint
       topic,
       shop,
       payload,
     });
-    console.log(`📤 Forwarded [${topic}] webhook → Next.js API`);
+    console.log(`📤 Forwarded [${topic}] webhook → internal API`);
   } catch (fwdErr) {
     console.error("❌ Forwarding failed:", fwdErr);
   }

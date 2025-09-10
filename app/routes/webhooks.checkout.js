@@ -180,22 +180,19 @@ function getISTDateTime() {
 }
 
 export async function action({ request }) {
-  let payload, topic, shopUrl;
-
-  // ✅ Validate webhook (HMAC + parse)
-  try {
-    const { topic: t, shop, body } = await shopify.webhooks.process(request);
-    topic = t;
-    shopUrl = shop;
-    payload = JSON.parse(body); // raw JSON → object
-  } catch (err) {
-    console.error("❌ Webhook validation failed:", err);
-    return json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const topic = request.headers.get("x-shopify-topic"); // "checkouts/create" or "checkouts/update"
+  const shopUrl = request.headers.get("x-shopify-shop-domain");
 
   console.log("📥 Incoming Checkout Webhook →", { topic, shopUrl });
 
-  // 🆔 Checkout ID
+  let payload;
+  try {
+    payload = await request.json();
+  } catch (err) {
+    console.error("❌ Failed to parse JSON payload:", err);
+    return json({ error: "Invalid JSON" }, { status: 400 });
+  }
+
   const checkoutId = payload?.id;
   if (!checkoutId) {
     console.warn("⚠️ Missing checkout ID in payload:", payload);
@@ -210,20 +207,9 @@ export async function action({ request }) {
     const createdAt = getISTDateTime();
     const updatedAt = getISTDateTime();
 
-    console.log(
-      `🔎 Processing checkout webhook [${topic}] → ID: ${checkoutId}`,
-    );
-
     try {
       switch (topic) {
-        case "checkouts/create": {
-          console.log("🆕 Checkout CREATE received:", {
-            checkoutId,
-            email: payload.email,
-            total: payload.total_price,
-            currency: payload.currency,
-          });
-
+        case "checkouts/create":
           await pool.execute(
             `
             INSERT INTO checkouts (
@@ -279,16 +265,8 @@ export async function action({ request }) {
             console.error("❌ Forwarding error:", forwardErr);
           }
           break;
-        }
 
-        case "checkouts/update": {
-          console.log("♻️ Checkout UPDATE received:", {
-            checkoutId,
-            email: payload.email,
-            total: payload.total_price,
-            currency: payload.currency,
-          });
-
+        case "checkouts/update":
           await pool.execute(
             `
             UPDATE checkouts SET
@@ -317,7 +295,6 @@ export async function action({ request }) {
 
           console.log(`✅ Checkout updated in DB → ${checkoutId}`);
           break;
-        }
 
         default:
           console.log(`⚠️ Unhandled webhook topic: ${topic}`);

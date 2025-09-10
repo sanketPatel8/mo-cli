@@ -3,138 +3,160 @@
 // import pool from "../db.server.js";
 // import { forwardToWebhookSite } from "../utils/forwardToWebhookSite.js";
 
+// function getISTDateTime() {
+//   const now = new Date();
+//   const ist = new Date(
+//     now.toLocaleString("en-US", { timeZone: "Asia/Kolkata" }),
+//   );
+//   const year = ist.getFullYear();
+//   const month = String(ist.getMonth() + 1).padStart(2, "0");
+//   const day = String(ist.getDate()).padStart(2, "0");
+//   const hours = String(ist.getHours()).padStart(2, "0");
+//   const minutes = String(ist.getMinutes()).padStart(2, "0");
+//   const seconds = String(ist.getSeconds()).padStart(2, "0");
+//   return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+// }
+
 // export async function action({ request }) {
+//   const topic = request.headers.get("x-shopify-topic");
+//   const shopUrl = request.headers.get("x-shopify-shop-domain");
+
+//   console.log(`📥 Webhook received: ${topic}`);
+
+//   let payload = {};
 //   try {
-//     const topic = request.headers.get("x-shopify-topic");
-//     const shopUrl = request.headers.get("x-shopify-shop-domain");
+//     const response = await shopify.webhooks.process(request);
+//     if (!response.ok) console.warn("⚠️ Skipping HMAC check (local/dev)");
 
-//     console.log(`📥 Webhook received: ${topic}`);
-
-//     let payload;
+//     payload = await request.json();
+//   } catch (err) {
+//     console.warn("⚠️ shopify.webhooks.process failed:", err.message);
 //     try {
-//       // Verify webhook (HMAC check)
-//       const response = await shopify.webhooks.process(request);
-//       if (!response.ok) console.warn("⚠️ Skipping HMAC check (local/dev)");
 //       payload = await request.json();
-//     } catch (err) {
-//       console.warn("⚠️ shopify.webhooks.process failed:", err.message);
-//       payload = await request.json();
-//     }
-
-//     const checkoutId = payload.id;
-//     if (!checkoutId) {
-//       console.warn("⚠️ No checkout ID in payload");
+//     } catch {
+//       console.error("❌ Invalid payload body");
 //       return json({ error: "Invalid payload" }, { status: 400 });
 //     }
+//   }
 
-//     function getISTDateTime() {
-//       const now = new Date();
-//       const ist = new Date(
-//         now.toLocaleString("en-US", { timeZone: "Asia/Kolkata" }),
-//       );
+//   const checkoutId = payload?.id;
 
-//       const year = ist.getFullYear();
-//       const month = String(ist.getMonth() + 1).padStart(2, "0");
-//       const day = String(ist.getDate()).padStart(2, "0");
-//       const hours = String(ist.getHours()).padStart(2, "0");
-//       const minutes = String(ist.getMinutes()).padStart(2, "0");
-//       const seconds = String(ist.getSeconds()).padStart(2, "0");
+//   if (!checkoutId) {
+//     console.warn("⚠️ No checkout ID in payload");
+//     return json({ error: "Invalid payload" }, { status: 400 });
+//   }
 
-//       return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
-//     }
+//   // ✅ Immediate 200 response to Shopify
+//   const responseObj = json({ success: true });
 
+//   // 🔄 Background async task (non-blocking)
+//   (async () => {
 //     const createdAt = getISTDateTime();
 //     const updatedAt = getISTDateTime();
 
-//     switch (topic) {
-//       case "checkouts/create":
-//         console.log("🆕 Handling checkout CREATE:", checkoutId);
+//     try {
+//       switch (topic) {
+//         case "checkouts/create":
+//           console.log("🆕 Handling checkout CREATE:", checkoutId);
 
-//         // Try insert
-//         await pool.execute(
-//           `
-//           INSERT IGNORE INTO checkouts (
-//             id, token, cart_token, email, created_at, updated_at,
-//             total_line_items_price, total_tax, subtotal_price, total_price,
-//             currency, line_items, shipping_lines, tax_lines, shop_url
-//           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-//         `,
-//           [
-//             checkoutId,
-//             payload.token,
-//             payload.cart_token,
-//             payload.email,
-//             createdAt,
-//             updatedAt,
-//             payload.total_line_items_price || 0,
-//             payload.total_tax || 0,
-//             payload.subtotal_price || 0,
-//             payload.total_price || 0,
-//             payload.currency,
-//             JSON.stringify(payload.line_items || []),
-//             JSON.stringify(payload.shipping_lines || []),
-//             JSON.stringify(payload.tax_lines || []),
-//             shopUrl,
-//           ],
-//         );
+//           await pool.execute(
+//             `
+//             INSERT INTO checkouts (
+//               id, token, cart_token, email, created_at, updated_at,
+//               total_line_items_price, total_tax, subtotal_price, total_price,
+//               currency, line_items, shipping_lines, tax_lines, shop_url
+//             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+//             ON DUPLICATE KEY UPDATE
+//               token = VALUES(token),
+//               cart_token = VALUES(cart_token),
+//               email = VALUES(email),
+//               updated_at = VALUES(updated_at),
+//               total_line_items_price = VALUES(total_line_items_price),
+//               total_tax = VALUES(total_tax),
+//               subtotal_price = VALUES(subtotal_price),
+//               total_price = VALUES(total_price),
+//               currency = VALUES(currency),
+//               line_items = VALUES(line_items),
+//               shipping_lines = VALUES(shipping_lines),
+//               tax_lines = VALUES(tax_lines),
+//               shop_url = VALUES(shop_url)
+//           `,
+//             [
+//               checkoutId,
+//               payload.token,
+//               payload.cart_token,
+//               payload.email,
+//               createdAt,
+//               updatedAt,
+//               payload.total_line_items_price || 0,
+//               payload.total_tax || 0,
+//               payload.subtotal_price || 0,
+//               payload.total_price || 0,
+//               payload.currency,
+//               JSON.stringify(payload.line_items || []),
+//               JSON.stringify(payload.shipping_lines || []),
+//               JSON.stringify(payload.tax_lines || []),
+//               shopUrl,
+//             ],
+//           );
 
-//         console.log(`✅ Checkout created/inserted: ${checkoutId}`);
+//           console.log(`✅ Checkout inserted/updated: ${checkoutId}`);
 
-//         const shop = request.headers.get("x-shopify-shop-domain");
+//           // Forward only CREATE events
+//           try {
+//             await forwardToWebhookSite({
+//               url: `${process.env.SHOPIFY_NEXT_URI}/api/shopify/orders`,
+//               topic,
+//               shop: shopUrl,
+//               payload,
+//             });
+//             console.log(`📤 Forwarded checkout create → Next.js API`);
+//           } catch (forwardErr) {
+//             console.error("❌ Forwarding error:", forwardErr);
+//           }
+//           break;
 
-//         await forwardToWebhookSite({
-//           url: `${process.env.SHOPIFY_NEXT_URI}/api/shopify/orders`,
-//           // url: `https://webhook.site/53a0792f-2d18-497d-bf6b-d42d7b070a21`,
-//           topic,
-//           shop,
-//           payload,
-//         });
+//         case "checkouts/update":
+//           console.log("♻️ Handling checkout UPDATE:", checkoutId);
 
-//         break;
+//           await pool.execute(
+//             `
+//             UPDATE checkouts SET
+//               token = ?, cart_token = ?, email = ?, updated_at = ?,
+//               total_line_items_price = ?, total_tax = ?, subtotal_price = ?, total_price = ?,
+//               currency = ?, line_items = ?, shipping_lines = ?, tax_lines = ?, shop_url = ?
+//             WHERE id = ?
+//           `,
+//             [
+//               payload.token,
+//               payload.cart_token,
+//               payload.email,
+//               updatedAt,
+//               payload.total_line_items_price || 0,
+//               payload.total_tax || 0,
+//               payload.subtotal_price || 0,
+//               payload.total_price || 0,
+//               payload.currency,
+//               JSON.stringify(payload.line_items || []),
+//               JSON.stringify(payload.shipping_lines || []),
+//               JSON.stringify(payload.tax_lines || []),
+//               shopUrl,
+//               checkoutId,
+//             ],
+//           );
 
-//       case "checkouts/update":
-//         console.log("♻️ Handling checkout UPDATE:", checkoutId);
+//           console.log(`✅ Checkout updated: ${checkoutId}`);
+//           break;
 
-//         // Update existing
-//         await pool.execute(
-//           `
-//           UPDATE checkouts SET
-//             token = ?, cart_token = ?, email = ?, created_at = ?, updated_at = ?,
-//             total_line_items_price = ?, total_tax = ?, subtotal_price = ?, total_price = ?,
-//             currency = ?, line_items = ?, shipping_lines = ?, tax_lines = ?, shop_url = ?
-//           WHERE id = ?
-//         `,
-//           [
-//             payload.token,
-//             payload.cart_token,
-//             payload.email,
-//             createdAt,
-//             updatedAt,
-//             payload.total_line_items_price || 0,
-//             payload.total_tax || 0,
-//             payload.subtotal_price || 0,
-//             payload.total_price || 0,
-//             payload.currency,
-//             JSON.stringify(payload.line_items || []),
-//             JSON.stringify(payload.shipping_lines || []),
-//             JSON.stringify(payload.tax_lines || []),
-//             shopUrl,
-//             checkoutId,
-//           ],
-//         );
-
-//         console.log(`✅ Checkout updated: ${checkoutId}`);
-//         break;
-
-//       default:
-//         console.log(`⚠️ Unhandled webhook topic: ${topic}`);
+//         default:
+//           console.log(`⚠️ Unhandled webhook topic: ${topic}`);
+//       }
+//     } catch (err) {
+//       console.error("🔥 Error in background checkout task:", err);
 //     }
+//   })();
 
-//     return json({ success: true });
-//   } catch (err) {
-//     console.error("🔥 Checkout webhook error:", err);
-//     return json({ error: "Webhook processing failed" }, { status: 500 });
-//   }
+//   return responseObj;
 // }
 
 import { json } from "@remix-run/node";
@@ -142,6 +164,7 @@ import shopify from "../shopify.server";
 import pool from "../db.server.js";
 import { forwardToWebhookSite } from "../utils/forwardToWebhookSite.js";
 
+// 🕑 Helper: IST timestamp
 function getISTDateTime() {
   const now = new Date();
   const ist = new Date(
@@ -160,12 +183,18 @@ export async function action({ request }) {
   const topic = request.headers.get("x-shopify-topic");
   const shopUrl = request.headers.get("x-shopify-shop-domain");
 
-  console.log(`📥 Webhook received: ${topic}`);
+  console.log("📥 Incoming Checkout Webhook →", {
+    topic,
+    shopUrl,
+  });
 
   let payload = {};
   try {
+    // ✅ Verify webhook (HMAC)
     const response = await shopify.webhooks.process(request);
-    if (!response.ok) console.warn("⚠️ Skipping HMAC check (local/dev)");
+    if (!response.ok) {
+      console.warn("⚠️ HMAC check skipped (local/dev mode)");
+    }
 
     payload = await request.json();
   } catch (err) {
@@ -173,29 +202,39 @@ export async function action({ request }) {
     try {
       payload = await request.json();
     } catch {
-      console.error("❌ Invalid payload body");
+      console.error("❌ Could not parse webhook payload");
       return json({ error: "Invalid payload" }, { status: 400 });
     }
   }
 
+  // 🆔 Checkout ID
   const checkoutId = payload?.id;
   if (!checkoutId) {
-    console.warn("⚠️ No checkout ID in payload");
+    console.warn("⚠️ Missing checkout ID in payload:", payload);
     return json({ error: "Invalid payload" }, { status: 400 });
   }
 
-  // ✅ Immediate 200 response to Shopify
+  // ✅ Immediately acknowledge Shopify
   const responseObj = json({ success: true });
 
-  // 🔄 Background async task (non-blocking)
+  // 🔄 Process in background
   (async () => {
     const createdAt = getISTDateTime();
     const updatedAt = getISTDateTime();
 
+    console.log(
+      `🔎 Processing checkout webhook [${topic}] → ID: ${checkoutId}`,
+    );
+
     try {
       switch (topic) {
-        case "checkouts/create":
-          console.log("🆕 Handling checkout CREATE:", checkoutId);
+        case "checkouts/create": {
+          console.log("🆕 Checkout CREATE received:", {
+            checkoutId,
+            email: payload.email,
+            total: payload.total_price,
+            currency: payload.currency,
+          });
 
           await pool.execute(
             `
@@ -238,9 +277,8 @@ export async function action({ request }) {
             ],
           );
 
-          console.log(`✅ Checkout inserted/updated: ${checkoutId}`);
+          console.log(`✅ Checkout inserted/updated in DB → ${checkoutId}`);
 
-          // Forward only CREATE events
           try {
             await forwardToWebhookSite({
               url: `${process.env.SHOPIFY_NEXT_URI}/api/shopify/orders`,
@@ -248,14 +286,20 @@ export async function action({ request }) {
               shop: shopUrl,
               payload,
             });
-            console.log(`📤 Forwarded checkout create → Next.js API`);
+            console.log("📤 Forwarded checkout create → Next.js API");
           } catch (forwardErr) {
             console.error("❌ Forwarding error:", forwardErr);
           }
           break;
+        }
 
-        case "checkouts/update":
-          console.log("♻️ Handling checkout UPDATE:", checkoutId);
+        case "checkouts/update": {
+          console.log("♻️ Checkout UPDATE received:", {
+            checkoutId,
+            email: payload.email,
+            total: payload.total_price,
+            currency: payload.currency,
+          });
 
           await pool.execute(
             `
@@ -283,14 +327,19 @@ export async function action({ request }) {
             ],
           );
 
-          console.log(`✅ Checkout updated: ${checkoutId}`);
+          console.log(`✅ Checkout updated in DB → ${checkoutId}`);
           break;
+        }
 
         default:
           console.log(`⚠️ Unhandled webhook topic: ${topic}`);
       }
     } catch (err) {
-      console.error("🔥 Error in background checkout task:", err);
+      console.error("🔥 Error processing checkout webhook:", err);
+      console.error(
+        "📝 Payload that caused error:",
+        JSON.stringify(payload, null, 2),
+      );
     }
   })();
 

@@ -214,8 +214,8 @@ export async function action({ request }) {
             INSERT INTO checkouts (
               id, token, cart_token, email, created_at, updated_at,
               total_line_items_price, total_tax, subtotal_price, total_price,
-              currency, line_items, shipping_lines, tax_lines, shop_url
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+              currency, abandoned_checkout_url, line_items, shipping_lines, tax_lines, shop_url
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? , ?)
             ON DUPLICATE KEY UPDATE
               token = VALUES(token),
               cart_token = VALUES(cart_token),
@@ -226,6 +226,7 @@ export async function action({ request }) {
               subtotal_price = VALUES(subtotal_price),
               total_price = VALUES(total_price),
               currency = VALUES(currency),
+              abandoned_checkout_url = VALUES(abandoned_checkout_url)
               line_items = VALUES(line_items),
               shipping_lines = VALUES(shipping_lines),
               tax_lines = VALUES(tax_lines),
@@ -243,6 +244,7 @@ export async function action({ request }) {
             payload.subtotal_price || 0,
             payload.total_price || 0,
             payload.currency,
+            payload.abandoned_checkout_url,
             JSON.stringify(payload.line_items || []),
             JSON.stringify(payload.shipping_lines || []),
             JSON.stringify(payload.tax_lines || []),
@@ -271,7 +273,7 @@ export async function action({ request }) {
             UPDATE checkouts SET
               token = ?, cart_token = ?, email = ?, updated_at = ?,
               total_line_items_price = ?, total_tax = ?, subtotal_price = ?, total_price = ?,
-              currency = ?, line_items = ?, shipping_lines = ?, tax_lines = ?, shop_url = ?
+              currency = ?, abandoned_checkout_url = ?, line_items = ?, shipping_lines = ?, tax_lines = ?, shop_url = ?
             WHERE id = ?
           `,
           [
@@ -284,6 +286,7 @@ export async function action({ request }) {
             payload.subtotal_price || 0,
             payload.total_price || 0,
             payload.currency,
+            payload.abandoned_checkout_url,
             JSON.stringify(payload.line_items || []),
             JSON.stringify(payload.shipping_lines || []),
             JSON.stringify(payload.tax_lines || []),

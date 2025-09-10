@@ -202,15 +202,15 @@ export async function action({ request }) {
   const responseObj = json({ success: true });
 
   // 🔄 Process in background
-  (async () => {
-    const createdAt = getISTDateTime();
-    const updatedAt = getISTDateTime();
 
-    try {
-      switch (topic) {
-        case "checkouts/create":
-          await pool.execute(
-            `
+  const createdAt = getISTDateTime();
+  const updatedAt = getISTDateTime();
+
+  try {
+    switch (topic) {
+      case "checkouts/create":
+        await pool.execute(
+          `
             INSERT INTO checkouts (
               id, token, cart_token, email, created_at, updated_at,
               total_line_items_price, total_tax, subtotal_price, total_price,
@@ -231,81 +231,80 @@ export async function action({ request }) {
               tax_lines = VALUES(tax_lines),
               shop_url = VALUES(shop_url)
           `,
-            [
-              checkoutId,
-              payload.token,
-              payload.cart_token,
-              payload.email,
-              createdAt,
-              updatedAt,
-              payload.total_line_items_price || 0,
-              payload.total_tax || 0,
-              payload.subtotal_price || 0,
-              payload.total_price || 0,
-              payload.currency,
-              JSON.stringify(payload.line_items || []),
-              JSON.stringify(payload.shipping_lines || []),
-              JSON.stringify(payload.tax_lines || []),
-              shopUrl,
-            ],
-          );
+          [
+            checkoutId,
+            payload.token,
+            payload.cart_token,
+            payload.email,
+            createdAt,
+            updatedAt,
+            payload.total_line_items_price || 0,
+            payload.total_tax || 0,
+            payload.subtotal_price || 0,
+            payload.total_price || 0,
+            payload.currency,
+            JSON.stringify(payload.line_items || []),
+            JSON.stringify(payload.shipping_lines || []),
+            JSON.stringify(payload.tax_lines || []),
+            shopUrl,
+          ],
+        );
 
-          console.log(`✅ Checkout inserted/updated in DB → ${checkoutId}`);
+        console.log(`✅ Checkout inserted/updated in DB → ${checkoutId}`);
 
-          try {
-            await forwardToWebhookSite({
-              url: `${process.env.SHOPIFY_NEXT_URI}/api/shopify/orders`,
-              topic,
-              shop: shopUrl,
-              payload,
-            });
-            console.log("📤 Forwarded checkout create → Next.js API");
-          } catch (forwardErr) {
-            console.error("❌ Forwarding error:", forwardErr);
-          }
-          break;
+        try {
+          await forwardToWebhookSite({
+            url: `${process.env.SHOPIFY_NEXT_URI}/api/shopify/orders`,
+            topic,
+            shop: shopUrl,
+            payload,
+          });
+          console.log("📤 Forwarded checkout create → Next.js API");
+        } catch (forwardErr) {
+          console.error("❌ Forwarding error:", forwardErr);
+        }
+        break;
 
-        case "checkouts/update":
-          await pool.execute(
-            `
+      case "checkouts/update":
+        await pool.execute(
+          `
             UPDATE checkouts SET
               token = ?, cart_token = ?, email = ?, updated_at = ?,
               total_line_items_price = ?, total_tax = ?, subtotal_price = ?, total_price = ?,
               currency = ?, line_items = ?, shipping_lines = ?, tax_lines = ?, shop_url = ?
             WHERE id = ?
           `,
-            [
-              payload.token,
-              payload.cart_token,
-              payload.email,
-              updatedAt,
-              payload.total_line_items_price || 0,
-              payload.total_tax || 0,
-              payload.subtotal_price || 0,
-              payload.total_price || 0,
-              payload.currency,
-              JSON.stringify(payload.line_items || []),
-              JSON.stringify(payload.shipping_lines || []),
-              JSON.stringify(payload.tax_lines || []),
-              shopUrl,
-              checkoutId,
-            ],
-          );
+          [
+            payload.token,
+            payload.cart_token,
+            payload.email,
+            updatedAt,
+            payload.total_line_items_price || 0,
+            payload.total_tax || 0,
+            payload.subtotal_price || 0,
+            payload.total_price || 0,
+            payload.currency,
+            JSON.stringify(payload.line_items || []),
+            JSON.stringify(payload.shipping_lines || []),
+            JSON.stringify(payload.tax_lines || []),
+            shopUrl,
+            checkoutId,
+          ],
+        );
 
-          console.log(`✅ Checkout updated in DB → ${checkoutId}`);
-          break;
+        console.log(`✅ Checkout updated in DB → ${checkoutId}`);
+        break;
 
-        default:
-          console.log(`⚠️ Unhandled webhook topic: ${topic}`);
-      }
-    } catch (err) {
-      console.error("🔥 Error processing checkout webhook:", err);
-      console.error(
-        "📝 Payload that caused error:",
-        JSON.stringify(payload, null, 2),
-      );
+      default:
+        console.log(`⚠️ Unhandled webhook topic: ${topic}`);
     }
-  })();
+  } catch (err) {
+    console.error("🔥 Error processing checkout webhook:", err);
+    console.error(
+      "📝 Payload that caused error:",
+      JSON.stringify(payload, null, 2),
+    );
+  }
 
   return responseObj;
 }

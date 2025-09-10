@@ -160,7 +160,6 @@
 // }
 
 import { json } from "@remix-run/node";
-import shopify from "../shopify.server";
 import pool from "../db.server.js";
 import { forwardToWebhookSite } from "../utils/forwardToWebhookSite.js";
 

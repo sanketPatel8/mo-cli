@@ -180,32 +180,20 @@ function getISTDateTime() {
 }
 
 export async function action({ request }) {
-  const topic = request.headers.get("x-shopify-topic");
-  const shopUrl = request.headers.get("x-shopify-shop-domain");
+  let payload, topic, shopUrl;
 
-  console.log("📥 Incoming Checkout Webhook →", {
-    topic,
-    shopUrl,
-  });
-
-  let payload = {};
+  // ✅ Validate webhook (HMAC + parse)
   try {
-    // ✅ Verify webhook (HMAC)
-    const response = await shopify.webhooks.process(request);
-    if (!response.ok) {
-      console.warn("⚠️ HMAC check skipped (local/dev mode)");
-    }
-
-    payload = await request.json();
+    const { topic: t, shop, body } = await shopify.webhooks.process(request);
+    topic = t;
+    shopUrl = shop;
+    payload = JSON.parse(body); // raw JSON → object
   } catch (err) {
-    console.warn("⚠️ shopify.webhooks.process failed:", err.message);
-    try {
-      payload = await request.json();
-    } catch {
-      console.error("❌ Could not parse webhook payload");
-      return json({ error: "Invalid payload" }, { status: 400 });
-    }
+    console.error("❌ Webhook validation failed:", err);
+    return json({ error: "Unauthorized" }, { status: 401 });
   }
+
+  console.log("📥 Incoming Checkout Webhook →", { topic, shopUrl });
 
   // 🆔 Checkout ID
   const checkoutId = payload?.id;

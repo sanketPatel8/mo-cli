@@ -201,6 +201,8 @@ export async function action({ request }) {
   // ✅ Immediately acknowledge Shopify
   const responseObj = json({ success: true });
 
+  console.log(payload, "payload");
+
   // 🔄 Process in background
 
   const createdAt = getISTDateTime();
@@ -254,7 +256,7 @@ export async function action({ request }) {
 
         try {
           await forwardToWebhookSite({
-            url: `${process.env.SHOPIFY_NEXT_URI}/api/cron/abandoned-cart`,
+            url: `${process.env.SHOPIFY_NEXT_URI}/api/shopify/orders`,
             topic,
             shop: shopUrl,
             payload,

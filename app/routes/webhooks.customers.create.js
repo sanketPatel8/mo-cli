@@ -60,28 +60,28 @@
 // }
 
 import { json } from "@remix-run/node";
-import shopify from "../shopify.server"; // adjust path if needed
+import { webhookHandler } from "../shopify.server"; // adjust path if needed
 import { forwardToWebhookSite } from "../utils/forwardToWebhookSite.js";
-import pool from "../db.server.js"; // tamaru DB connection
 
 export async function action({ request }) {
   console.log("📥 Webhook request received: customers/create");
 
   const shop = request.headers.get("x-shopify-shop-domain");
-  const topic = request.headers.get("x-shopify-topic"); // "customers/create"
+  const topic = request.headers.get("x-shopify-topic"); // should be "customers/create"
 
   let payload;
+
   try {
-    // ✅ Validate Shopify webhook
+    // ✅ Validate & parse webhook
     try {
-      const response = await shopify.webhooks.process(request);
+      const response = await webhookHandler(request);
       if (!response.ok) {
-        console.warn("⚠️ HMAC validation skipped (local/dev test)");
+        console.warn("⚠️ HMAC validation skipped (likely dev/local test)");
       }
       payload = await request.json();
     } catch (err) {
-      console.warn("⚠️ HMAC validation failed, falling back:", err.message);
-      payload = await request.json(); // fallback for local/curl tests
+      console.warn("⚠️ HMAC validation failed, using fallback:", err.message);
+      payload = await request.json(); // fallback for curl/local tests
     }
 
     if (!payload?.id) {
@@ -91,32 +91,16 @@ export async function action({ request }) {
 
     console.log("✅ Customer created:", payload.id, payload.email);
 
-    // 🔹 Prevent duplicate processing in DB
-    const [existing] = await pool.query(
-      `SELECT * FROM customers WHERE customer_id = ? AND shop = ?`,
-      [payload.id, shop],
-    );
-
-    if (existing.length > 0) {
-      console.log(
-        "⚠️ Customer already processed, skipping forward:",
-        payload.id,
-      );
-      return json({ success: true, message: "Customer already processed" });
-    }
-
-    // 🔹 Insert customer into DB (optional, for record-keeping)
-    await pool.query(
-      `INSERT INTO customers (customer_id, shop, payload, created_at) VALUES (?, ?, ?, NOW())`,
-      [payload.id, shop, JSON.stringify(payload)],
-    );
-
-    // 🔹 Respond 200 immediately to Shopify
+    // ✅ Respond 200 to Shopify immediately
     const responseObj = json({ success: true });
 
-    // 🔹 Forward asynchronously (non-blocking)
+    // 🔄 Forward asynchronously (non-blocking)
     forwardToWebhookSite({
-      url: `${process.env.SHOPIFY_NEXT_URI}/api/shopify/customers`,
+      // Production forward:
+      // url: `${process.env.SHOPIFY_NEXT_URI}/api/shopify/customers`,
+
+      // Debug forward (webhook.site):
+      url: "https://webhook.site/4aa517f4-3dee-4ff2-9f88-574e26dd1413",
       topic,
       shop,
       payload,

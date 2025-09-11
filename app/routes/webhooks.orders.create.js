@@ -1,49 +1,63 @@
 import { json } from "@remix-run/node";
+import { webhookHandler } from "../shopify.server"; // ✅ centralized webhook validation
 import { forwardToWebhookSite } from "../utils/forwardToWebhookSite.js";
 import pool from "../db.server.js";
 
 export async function action({ request }) {
-  const topic = request.headers.get("x-shopify-topic"); // should be "orders/create"
+  console.log("📥 Webhook request received: orders/create");
+
+  const topic = request.headers.get("x-shopify-topic"); // "orders/create"
   const shop = request.headers.get("x-shopify-shop-domain");
 
-  let payload = {};
-  try {
-    payload = await request.json();
-  } catch (err) {
-    console.error("❌ Failed to parse webhook JSON:", err);
-    return json({ error: "Invalid JSON" }, { status: 400 });
-  }
-
-  const orderId = payload?.id;
-  console.log(
-    `📥 Webhook [${topic}] received from ${shop}, order_id=${orderId}`,
-  );
+  let payload;
 
   try {
-    // ✅ Respond immediately so Shopify doesn’t retry
-    const response = json({ success: true });
-
-    // 🔄 Forward webhook asynchronously
+    // ✅ Validate & parse webhook
     try {
-      await forwardToWebhookSite({
-        url: `${process.env.SHOPIFY_NEXT_URI}/api/shopify/orders`,
-        topic,
-        shop,
-        payload,
-      });
-      console.log(`📤 Forwarded [${topic}] webhook → Next.js API`);
-    } catch (fwdErr) {
-      console.error("❌ Forwarding failed:", fwdErr);
+      const response = await webhookHandler(request);
+      if (!response.ok) {
+        console.warn("⚠️ HMAC validation skipped (likely dev/local test)");
+      }
+      payload = await request.json();
+    } catch (err) {
+      console.warn("⚠️ HMAC validation failed, using fallback:", err.message);
+      payload = await request.json(); // fallback for curl/local tests
     }
 
-    if (orderId) {
-      // 🔹 Step 1: Check if order exists
+    const orderId = payload?.id;
+    if (!orderId) {
+      console.warn("⚠️ Missing order ID in payload");
+      return json({ error: "Invalid payload" }, { status: 400 });
+    }
 
-      pool.query(
+    console.log(`✅ Order created: ${orderId} from shop ${shop}`);
+
+    // ✅ Respond 200 immediately (avoid Shopify retries)
+    const responseObj = json({ success: true });
+
+    // 🔄 Forward asynchronously (non-blocking)
+    forwardToWebhookSite({
+      // prod:
+      // url: `${process.env.SHOPIFY_NEXT_URI}/api/shopify/orders`,
+      // debug:
+      url: "https://webhook.site/4aa517f4-3dee-4ff2-9f88-574e26dd1413",
+      topic,
+      shop,
+      payload,
+    }).catch((err) => console.error("❌ Forwarding failed:", err));
+
+    // 🔹 Save/Update Order in DB
+    pool
+      .query(
         `INSERT INTO orders 
-    (id, email, total_price, currency, created_at, updated_at, shop_url, raw_payload)
-   VALUES (?, ?, ?, ?, NOW(), NOW(), ?, ?)
-   ON DUPLICATE KEY UPDATE updated_at = NOW()`,
+          (id, email, total_price, currency, created_at, updated_at, shop_url, raw_payload)
+         VALUES (?, ?, ?, ?, NOW(), NOW(), ?, ?)
+         ON DUPLICATE KEY UPDATE 
+           email = VALUES(email),
+           total_price = VALUES(total_price),
+           currency = VALUES(currency),
+           updated_at = NOW(),
+           raw_payload = VALUES(raw_payload)`,
         [
           orderId,
           payload.email || null,
@@ -52,13 +66,11 @@ export async function action({ request }) {
           shop,
           JSON.stringify(payload),
         ],
-      );
-      console.log(`✅ Order ${orderId} inserted for shop ${shop}`);
-    } else {
-      console.log(`ℹ️ Order ${orderId} already exists in DB, skipping insert.`);
-    }
+      )
+      .then(() => console.log(`✅ Order ${orderId} stored/updated for ${shop}`))
+      .catch((dbErr) => console.error("❌ DB insert error:", dbErr));
 
-    return response;
+    return responseObj;
   } catch (err) {
     console.error("🔥 Error handling orders/create webhook:", err);
     return json({ error: "Webhook failed" }, { status: 500 });

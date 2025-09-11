@@ -61,11 +61,17 @@ import { json } from "@remix-run/node";
 import { authenticate } from "../shopify.server";
 
 export const loader = async ({ request }) => {
-  await authenticate.admin(request);
-  return json({
-    SHOPIFY_NEXT_URI: process.env.SHOPIFY_NEXT_URI,
-    SHOPIFY_STAGE_URI: process.env.SHOPIFY_STAGE_URI,
-  });
+  try {
+    await authenticate.admin(request);
+
+    const SHOPIFY_NEXT_URI = process.env.SHOPIFY_NEXT_URI || "";
+    const SHOPIFY_STAGE_URI = process.env.SHOPIFY_STAGE_URI || "";
+
+    return json({ SHOPIFY_NEXT_URI, SHOPIFY_STAGE_URI });
+  } catch (err) {
+    console.error("Loader error:", err);
+    throw new Response("Authentication failed", { status: 401 });
+  }
 };
 
 export default function Index() {

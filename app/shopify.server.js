@@ -65,11 +65,37 @@ const shopify = shopifyApp({
     unstable_newEmbeddedAuthStrategy: true,
     removeRest: false, // 👈 allow REST API
   },
+  // hooks: {
+  //   afterAuth: async ({ session }) => {
+  //     await shopify.registerWebhooks({ session });
+  //   },
+  // },
   hooks: {
     afterAuth: async ({ session }) => {
+      console.log("✅ Auth complete for shop:", session.shop);
+
+      // Save shop details in your DB (extra metadata if you want)
+      await pool.query(
+        `INSERT INTO stores (id, shop, access_token, sessionData, updated_at)
+       VALUES (?, ?, ?, ?, NOW())
+       ON DUPLICATE KEY UPDATE
+         access_token = VALUES(access_token),
+         sessionData = VALUES(sessionData),
+         updated_at = NOW()`,
+        [
+          session.id,
+          session.shop,
+          session.accessToken,
+          JSON.stringify(session),
+        ],
+      );
+
+      // Register webhooks
       await shopify.registerWebhooks({ session });
+      console.log("📦 Webhooks registered for", session.shop);
     },
   },
+
   webhooks: {
     ORDERS_CREATE: {
       deliveryMethod: DeliveryMethod.Http,

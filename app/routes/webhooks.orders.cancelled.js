@@ -115,7 +115,7 @@ export async function action({ request }) {
 
     // 🔄 Forward in background (non-blocking)
     forwardToWebhookSite({
-      url: `${process.env.SHOPIFY_NEXT_URI}/api/shopify/orders/cancelled`,
+      url: `${process.env.SHOPIFY_NEXT_URI}/api/shopify/orders`,
       topic,
       shop,
       payload,

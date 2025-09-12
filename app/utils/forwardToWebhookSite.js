@@ -81,14 +81,25 @@
 //   }
 // }
 
-export async function forwardToWebhookSite({ url, topic, shop, payload }) {
+import { isDuplicateOrder } from "./orderCache.js";
+
+export async function forwardToWebhookSite({
+  url,
+  topic,
+  shop,
+  payload,
+  retries = 1,
+}) {
+  const orderId = payload?.id;
+
+  // 🔹 Duplicate check here
+  if (isDuplicateOrder(orderId)) {
+    console.log(`⚠️ Duplicate order forwarding skipped: ${orderId}`);
+    return { success: true, duplicate: true };
+  }
+
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 6000);
-
-  console.log("url", url);
-  console.log("topic", topic);
-  console.log("shop", shop);
-  console.log("payload", payload);
 
   try {
     const res = await fetch(url, {
@@ -103,8 +114,6 @@ export async function forwardToWebhookSite({ url, topic, shop, payload }) {
       signal: controller.signal,
     });
 
-    console.log("res", res);
-
     if (!res.ok) {
       let text;
       try {
@@ -118,17 +127,35 @@ export async function forwardToWebhookSite({ url, topic, shop, payload }) {
         text,
       );
 
-      return {
-        success: false,
-        status: res.status,
-        statusText: res.statusText,
-        body: text,
-      };
+      if (retries > 0) {
+        console.warn(`🔄 Retrying forward → ${url}`);
+        return await forwardToWebhookSite({
+          url,
+          topic,
+          shop,
+          payload,
+          retries: retries - 1,
+        });
+      }
+
+      return { success: false, status: res.status, body: text };
     }
 
     return { success: true, status: res.status };
   } catch (err) {
     console.error("⚠️ Forwarding error:", err.message);
+
+    if (retries > 0) {
+      console.warn(`🔄 Retrying forward after error → ${url}`);
+      return await forwardToWebhookSite({
+        url,
+        topic,
+        shop,
+        payload,
+        retries: retries - 1,
+      });
+    }
+
     return { success: false, error: err.message };
   } finally {
     clearTimeout(timeout);

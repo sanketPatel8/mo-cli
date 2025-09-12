@@ -31,8 +31,8 @@ export async function action({ request }) {
   // (async () => {
   try {
     await forwardToWebhookSite({
-      url: `${process.env.SHOPIFY_NEXT_URI}/api/shopify/orders`,
-      // url: "https://webhook.site/4aa517f4-3dee-4ff2-9f88-574e26dd1413",
+      // url: `${process.env.SHOPIFY_NEXT_URI}/api/shopify/orders`,
+      url: "https://webhook.site/4aa517f4-3dee-4ff2-9f88-574e26dd1413",
       topic,
       shop,
       payload,

@@ -186,19 +186,20 @@ export async function action({ request }) {
   const response = json({ success: true });
 
   // 🔄 Forward asynchronously
-  (async () => {
-    try {
-      await forwardToWebhookSite({
-        url: `${process.env.SHOPIFY_NEXT_URI}/api/shopify/orders/updated`,
-        topic,
-        shop,
-        payload,
-      });
-      console.log(`📤 Forwarded [${topic}] → Next.js API`);
-    } catch (fwdErr) {
-      console.error("❌ Forwarding failed:", fwdErr);
-    }
-  })();
+  // (async () => {
+  try {
+    await forwardToWebhookSite({
+      url: `${process.env.SHOPIFY_NEXT_URI}/api/shopify/orders`,
+      // url: `https://webhosok.site/4aa517f4-3dee-4ff2-9f88-574e26dd1413`,
+      topic,
+      shop,
+      payload,
+    });
+    console.log(`📤 Forwarded [${topic}] → Next.js API`);
+  } catch (fwdErr) {
+    console.error("❌ Forwarding failed:", fwdErr);
+  }
+  // })();
 
   return response;
 }

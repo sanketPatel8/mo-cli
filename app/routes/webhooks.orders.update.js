@@ -99,51 +99,102 @@
 // }
 
 // app/routes/webhooks.orders.updated.js
+// import { json } from "@remix-run/node";
+// import { forwardToWebhookSite } from "../utils/forwardToWebhookSite.js";
+// import shopify from "../shopify.server.js";
+
+// export async function action({ request }) {
+//   const topic = request.headers.get("x-shopify-topic"); // "orders/updated"
+//   const shop = request.headers.get("x-shopify-shop-domain");
+
+//   let payload = {};
+//   try {
+//     // ✅ Verify webhook HMAC (prod)
+//     const verified = await shopify.webhooks.process(request);
+//     if (!verified.ok) {
+//       console.warn("⚠️ Skipping HMAC check (local/dev)");
+//     }
+
+//     payload = await request.json();
+//   } catch (err) {
+//     console.warn("⚠️ shopify.webhooks.process failed:", err.message);
+//     try {
+//       payload = await request.json();
+//     } catch {
+//       console.error("❌ Invalid JSON payload");
+//       return json({ error: "Invalid payload" }, { status: 400 });
+//     }
+//   }
+
+//   const orderId = payload?.id;
+//   console.log(
+//     `📥 Webhook received [${topic}] from ${shop}, order_id=${orderId}`,
+//   );
+
+//   // ✅ Always return 200 immediately so Shopify doesn’t retry
+//   const response = json({ success: true });
+
+//   // 🔄 Forward asynchronously (do not block response)
+//   (async () => {
+//     try {
+//       await forwardToWebhookSite({
+//         url: `${process.env.SHOPIFY_NEXT_URI}/api/shopify/orders`,
+//         topic,
+//         shop,
+//         payload,
+//       });
+//       console.log(`📤 Forwarded [${topic}] webhook → Next.js API`);
+//     } catch (fwdErr) {
+//       console.error("❌ Forwarding failed:", fwdErr);
+//     }
+//   })();
+
+//   return response;
+// }
+
 import { json } from "@remix-run/node";
 import { forwardToWebhookSite } from "../utils/forwardToWebhookSite.js";
-import shopify from "../shopify.server.js";
+import { webhookHandler } from "../shopify.server.js";
 
 export async function action({ request }) {
   const topic = request.headers.get("x-shopify-topic"); // "orders/updated"
   const shop = request.headers.get("x-shopify-shop-domain");
 
   let payload = {};
+
   try {
-    // ✅ Verify webhook HMAC (prod)
-    const verified = await shopify.webhooks.process(request);
-    if (!verified.ok) {
+    // ✅ Verify HMAC (does not block payload parsing)
+    const verificationResponse = await webhookHandler(request.clone());
+
+    if (!verificationResponse.ok) {
       console.warn("⚠️ Skipping HMAC check (local/dev)");
     }
 
+    // ✅ Safe: parse from cloned request
     payload = await request.json();
   } catch (err) {
-    console.warn("⚠️ shopify.webhooks.process failed:", err.message);
-    try {
-      payload = await request.json();
-    } catch {
-      console.error("❌ Invalid JSON payload");
-      return json({ error: "Invalid payload" }, { status: 400 });
-    }
+    console.error("❌ Failed to verify/parse webhook:", err);
+    return json({ error: "Invalid payload" }, { status: 400 });
   }
 
   const orderId = payload?.id;
   console.log(
-    `📥 Webhook received [${topic}] from ${shop}, order_id=${orderId}`,
+    `📥 Webhook [${topic}] received from ${shop}, order_id=${orderId}`,
   );
 
-  // ✅ Always return 200 immediately so Shopify doesn’t retry
+  // ✅ Always respond to Shopify immediately
   const response = json({ success: true });
 
-  // 🔄 Forward asynchronously (do not block response)
+  // 🔄 Forward asynchronously
   (async () => {
     try {
       await forwardToWebhookSite({
-        url: `${process.env.SHOPIFY_NEXT_URI}/api/shopify/orders`,
+        url: `${process.env.SHOPIFY_NEXT_URI}/api/shopify/orders/updated`,
         topic,
         shop,
         payload,
       });
-      console.log(`📤 Forwarded [${topic}] webhook → Next.js API`);
+      console.log(`📤 Forwarded [${topic}] → Next.js API`);
     } catch (fwdErr) {
       console.error("❌ Forwarding failed:", fwdErr);
     }

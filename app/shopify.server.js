@@ -326,11 +326,42 @@ export const unauthenticated = shopify.unauthenticated;
 export const login = shopify.login;
 export const registerWebhooks = shopify.registerWebhooks;
 export const sessionStorage = shopify.sessionStorage;
+
 export const webhookHandler = async (request) => {
   try {
-    return await shopify.webhooks.process(request);
+    console.log("📥 Webhook received");
+
+    // Log request headers
+    console.log("Headers:", Object.fromEntries(request.headers.entries()));
+
+    // Read and log the raw body
+    const rawBody = await request.text();
+    console.log("Raw Body:", rawBody);
+
+    // Process webhook
+    const result = await shopify.webhooks.process({
+      rawBody,
+      headers: Object.fromEntries(request.headers.entries()),
+    });
+
+    console.log("✅ Webhook processed successfully:", result);
+    return result;
   } catch (error) {
-    console.error("Webhook processing error:", error);
-    throw error;
+    // Detailed error logging
+    console.error("❌ Webhook processing error:", {
+      message: error.message,
+      stack: error.stack,
+      name: error.name,
+    });
+
+    // Optional: log the request info to debug payload issues
+    try {
+      const body = await request.clone().json();
+      console.log("Request JSON body (for debugging):", body);
+    } catch (_) {
+      console.log("Request body is not valid JSON");
+    }
+
+    throw error; // re-throw for upstream handling
   }
 };

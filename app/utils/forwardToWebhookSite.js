@@ -8,6 +8,12 @@ export async function forwardToWebhookSite({
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 6000);
 
+  console.log("url", url);
+  console.log("topic", topic);
+  console.log("shop", shop);
+  console.log("payload", payload);
+  console.log("retries", retries);
+
   try {
     const res = await fetch(url, {
       method: "POST",
@@ -20,6 +26,7 @@ export async function forwardToWebhookSite({
       body: JSON.stringify(payload),
       signal: controller.signal,
     });
+    console.log("res", res);
 
     if (!res.ok) {
       let text;

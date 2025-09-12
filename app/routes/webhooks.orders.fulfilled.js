@@ -26,8 +26,8 @@
 
 // app/routes/webhooks.orders.fulfilled.js
 // app/routes/webhooks.orders.fulfilled.js
+import { webhookHandler } from "../shopify.server.js";
 import { json } from "@remix-run/node";
-import { webhookHandler } from "../shopify.server"; // ✅ for validation
 import { forwardToWebhookSite } from "../utils/forwardToWebhookSite.js";
 
 export async function action({ request }) {

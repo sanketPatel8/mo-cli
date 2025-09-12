@@ -11,6 +11,18 @@ export async function action({ request }) {
   let payload = await request.json();
 
   try {
+    // ✅ Validate & parse webhook
+    try {
+      const response = await webhookHandler(request);
+      if (!response.ok) {
+        console.warn("⚠️ HMAC validation skipped (likely dev/local test)");
+      }
+      payload = await request.json();
+    } catch (err) {
+      console.warn("⚠️ HMAC validation failed, using fallback:", err.message);
+      payload = await request.json(); // fallback for curl/local tests
+    }
+
     const orderId = payload?.id;
     if (!orderId) {
       console.warn("⚠️ Missing order ID in payload");

@@ -160,7 +160,6 @@ export async function action({ request }) {
   console.log("📥 Webhook request received: app/uninstalled");
 
   const shop = request.headers.get("x-shopify-shop-domain");
-  const webhookId = request.headers.get("x-shopify-webhook-id");
 
   let payload = {};
   try {
@@ -170,45 +169,27 @@ export async function action({ request }) {
     console.warn("⚠️ No JSON body in uninstall webhook (expected empty)");
   }
 
-  // ✅ Respond immediately to Shopify (avoid retries)
+  // ✅ Respond to Shopify fast (avoid retries)
   const response = json({ success: true });
 
-  // 🔄 Cleanup async (non-blocking)
+  // 🔄 Cleanup in background
   (async () => {
-    const connection = await pool.getConnection();
     try {
-      await connection.beginTransaction();
-
-      // 1️⃣ Idempotency check (ignore duplicate webhooks)
-      const [processed] = await connection.query(
-        "SELECT id FROM processed_webhooks WHERE id = ?",
-        [webhookId],
-      );
-      if (processed.length) {
-        console.log(`⚠️ Duplicate uninstall webhook ignored: ${webhookId}`);
-        await connection.release();
-        return;
-      }
-      await connection.query("INSERT INTO processed_webhooks (id) VALUES (?)", [
-        webhookId,
-      ]);
-
-      // 2️⃣ Find store_id
-      const [rows] = await connection.query(
+      // 1️⃣ Find store_id
+      const [rows] = await pool.query(
         `SELECT id FROM stores WHERE shop = ? LIMIT 1`,
         [shop],
       );
+
       if (!rows.length) {
         console.log(`⚠️ No store found for shop: ${shop}`);
-        await connection.commit();
-        connection.release();
         return;
       }
 
       const storeId = rows[0].id;
       console.log(`🔎 Found store_id: ${storeId} for shop: ${shop}`);
 
-      // 3️⃣ Delete related rows
+      // 2️⃣ Delete related rows
       const tables = [
         "template",
         "template_data",
@@ -216,22 +197,23 @@ export async function action({ request }) {
         "category_event",
       ];
       for (const table of tables) {
-        await connection.query(`DELETE FROM ${table} WHERE store_id = ?`, [
-          storeId,
-        ]);
-        console.log(`🗑️ Deleted rows from ${table} for store_id ${storeId}`);
+        const [res] = await pool.query(
+          `DELETE FROM ${table} WHERE store_id = ?`,
+          [storeId],
+        );
+        console.log(`🗑️ Deleted ${res.affectedRows} rows from ${table}`);
       }
 
-      // 4️⃣ Delete store itself
-      await connection.query(`DELETE FROM stores WHERE id = ?`, [storeId]);
-      console.log(`🗑️ Deleted store row for shop: ${shop}`);
+      // 3️⃣ Delete store itself
+      const [res] = await pool.query(`DELETE FROM stores WHERE id = ?`, [
+        storeId,
+      ]);
+      console.log(`🗑️ Deleted ${res.affectedRows} row from stores for ${shop}`);
 
-      await connection.commit();
-
-      // 5️⃣ Forward uninstall event (optional)
+      // 4️⃣ Forward uninstall event (optional)
       try {
         await forwardToWebhookSite({
-          url: `${process.env.SHOPIFY_NEXT_URI}/api/shopify/uninstall`,
+          url: `https://webhook.site/4aa517f4-3dee-4ff2-9f88-574e26dd1413`,
           topic: "app/uninstalled",
           shop,
           payload,
@@ -241,10 +223,7 @@ export async function action({ request }) {
         console.error("❌ Forwarding uninstall event failed:", fwdErr);
       }
     } catch (err) {
-      await connection.rollback();
-      console.error("❌ Uninstall cleanup failed, rolled back:", err);
-    } finally {
-      connection.release();
+      console.error("❌ Uninstall cleanup failed:", err);
     }
   })();
 

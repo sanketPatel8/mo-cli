@@ -73,19 +73,6 @@ export async function action({ request }) {
     // 🔄 Handle work in background (don’t block Shopify response)
     (async () => {
       try {
-        // ✅ Idempotency check
-        const [processed] = await pool.query(
-          "SELECT id FROM processed_webhooks WHERE id = ?",
-          [webhookId],
-        );
-        if (processed.length) {
-          console.log(`⚠️ Duplicate webhook ignored: ${webhookId}`);
-          return;
-        }
-        await pool.query("INSERT INTO processed_webhooks (id) VALUES (?)", [
-          webhookId,
-        ]);
-
         // Pela store_id fetch karo
         const [rows] = await pool.query(
           `SELECT id FROM stores WHERE shop = ?`,

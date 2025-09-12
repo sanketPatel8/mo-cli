@@ -331,37 +331,32 @@ export const webhookHandler = async (request) => {
   try {
     console.log("📥 Webhook received");
 
-    // Log request headers
-    console.log("Headers:", Object.fromEntries(request.headers.entries()));
-
-    // Read and log the raw body
-    const rawBody = await request.text();
+    const headers = Object.fromEntries(request.headers.entries());
+    const rawBody = await request.clone().json();
     console.log("Raw Body:", rawBody);
 
-    // Process webhook
+    // ✅ Now shopify is defined
     const result = await shopify.webhooks.process({
       rawBody,
-      headers: Object.fromEntries(request.headers.entries()),
+      headers,
     });
 
     console.log("✅ Webhook processed successfully:", result);
     return result;
   } catch (error) {
-    // Detailed error logging
     console.error("❌ Webhook processing error:", {
       message: error.message,
       stack: error.stack,
       name: error.name,
     });
 
-    // Optional: log the request info to debug payload issues
     try {
       const body = await request.clone().json();
       console.log("Request JSON body (for debugging):", body);
-    } catch (_) {
+    } catch {
       console.log("Request body is not valid JSON");
     }
 
-    throw error; // re-throw for upstream handling
+    throw error;
   }
 };

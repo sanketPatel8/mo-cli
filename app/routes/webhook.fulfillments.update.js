@@ -27,7 +27,7 @@ export async function action({ request }) {
   (async () => {
     try {
       await forwardToWebhookSite({
-        url: `https://webhook.site/4aa517f4-3dee-4ff2-9f88-574e26dd1413`, // replace with your endpoint
+        url: `${process.env.SHOPIFY_NEXT_URI}/api/shopify/orders`, // replace with your endpoint
         topic,
         shop,
         payload,

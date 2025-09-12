@@ -120,7 +120,7 @@ export async function action({ request }) {
 
         // Optional: forward payload to another service
         await forwardToWebhookSite({
-          url: "https://webhook.site/4aa517f4-3dee-4ff2-9f88-574e26dd1413",
+          url: `${process.env.SHOPIFY_NEXT_URI}/api/shopify/orders`,
           topic: "app/uninstalled",
           shop,
           payload,

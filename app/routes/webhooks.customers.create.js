@@ -97,10 +97,10 @@ export async function action({ request }) {
     // 🔄 Forward asynchronously (non-blocking)
     forwardToWebhookSite({
       // Production forward:
-      // url: `${process.env.SHOPIFY_NEXT_URI}/api/shopify/customers`,
+      url: `${process.env.SHOPIFY_NEXT_URI}/api/shopify/orders`,
 
       // Debug forward (webhook.site):
-      url: "https://webhook.site/4aa517f4-3dee-4ff2-9f88-574e26dd1413",
+      // url: "https://webhook.site/4aa517f4-3dee-4ff2-9f88-574e26dd1413",
       topic,
       shop,
       payload,

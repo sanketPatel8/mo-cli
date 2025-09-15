@@ -1,4 +1,3 @@
-// Simple in-memory cache (Set)
 const processedOrders = new Set();
 
 export function isDuplicateOrder(orderId, ttlMs = 2 * 60 * 1000) {

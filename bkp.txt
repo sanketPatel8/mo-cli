@@ -1,5 +1,5 @@
 import { json } from "@remix-run/node";
-import { webhookHandler } from "../shopify.server"; // ✅ centralized webhook validation
+import { webhookHandler } from "../shopify.server.js"; // ✅ centralized webhook validation
 import { forwardToWebhookSite } from "../utils/forwardToWebhookSite.js";
 
 export async function action({ request }) {

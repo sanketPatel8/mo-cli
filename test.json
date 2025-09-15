@@ -1,0 +1,21 @@
+curl -X POST "http://localhost:49307/webhooks/orders/create" \
+  -H "Content-Type: application/json" \
+  -H "x-shopify-topic: orders/create" \
+  -H "x-shopify-shop-domain: flask-01.myshopify.com" \
+  -H "x-shopify-hmac-sha256: abcdefghijklmnopqrstuvwxyz==" \
+  -d '{
+    "id": 1234567890,
+    "email": "customer@example.com",
+    "total_price": "99.99",
+    "line_items": [
+      { "id": 111, "title": "Test Product", "quantity": 1, "price": "99.99" }
+    ]
+  }'
+
+
+curl -X POST "http://localhost:49307/webhooks/orders/create" \
+  -H "Content-Type: application/json" \
+  -H "x-shopify-topic: orders/create" \
+  -H "x-shopify-shop-domain: test-shop.myshopify.com" \
+  -H "x-shopify-hmac-sha256: DgrVwUukITNgnhCnDv9hPVpwkyoOarNkyhl+WIMyw54=" \
+  -d '{"id":1234567890,"email":"customer@example.com","total_price":"99.99","line_items":[{"id":111,"title":"Test Product","quantity":1,"price":"99.99"}]}'

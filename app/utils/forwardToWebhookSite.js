@@ -148,7 +148,7 @@ export async function forwardToWebhookSite({ url, topic, shop, payload }) {
     ];
 
     console.log("🌍 Forwarding payload to:", urls);
-    console.log("📦 Payload sample:", JSON.stringify(payload).slice(0, 300));
+    console.log("📦 Payload sample:", JSON.stringify(payload));
     console.log("🔖 Headers:", { topic, shop });
 
     const results = [];

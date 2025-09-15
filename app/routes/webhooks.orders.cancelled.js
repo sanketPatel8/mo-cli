@@ -65,72 +65,113 @@
 //   }
 // }
 
+// import { json } from "@remix-run/node";
+// import shopify from "../shopify.server.js";
+// import { forwardToWebhookSite } from "../utils/forwardToWebhookSite.js";
+
+// // ✅ Optional wrapper for HMAC + payload parse
+// async function verifyWebhook(request) {
+//   const shop = request.headers.get("x-shopify-shop-domain");
+//   const topic = request.headers.get("x-shopify-topic");
+
+//   try {
+//     const { body } = await shopify.webhooks.process(request); // SDK verifies HMAC
+//     let payload;
+//     try {
+//       payload = JSON.parse(body);
+//     } catch {
+//       payload = body;
+//     }
+//     return { valid: true, shop, topic, payload };
+//   } catch (err) {
+//     console.warn("⚠️ HMAC validation failed:", err.message);
+//     let payload = {};
+//     try {
+//       payload = await request.json();
+//     } catch {
+//       throw new Error("Invalid webhook payload");
+//     }
+//     return { valid: false, shop, topic, payload };
+//   }
+// }
+
+// export async function action({ request }) {
+//   console.log("📥 Webhook received: orders/cancelled");
+
+//   try {
+//     const { valid, shop, topic, payload } = await verifyWebhook(request);
+
+//     if (!payload?.id) {
+//       console.warn("⚠️ Missing order ID in payload");
+//       return json({ error: "Invalid payload" }, { status: 400 });
+//     }
+
+//     console.log(
+//       `✅ Order cancelled: #${payload.name || payload.id} (Shop: ${shop}) | HMAC valid: ${valid}`,
+//     );
+
+//     // ✅ Immediate 200 OK (prevents Shopify retries)
+//     const responseObj = json({ success: true });
+
+//     // 🔄 Forward in background (non-blocking)
+//     forwardToWebhookSite({
+//       url: `${process.env.SHOPIFY_NEXT_URI}/api/shopify/orders`,
+//       // url: "https://webhosok.site/4aa517f4-3dee-4ff2-9f88-574e26dd1413",
+//       topic,
+//       shop,
+//       payload,
+//     })
+//       .then(() => {
+//         console.log("📤 Forwarded orders/cancelled → Next.js API");
+//       })
+//       .catch((err) => {
+//         console.error("❌ Forwarding failed:", err);
+//       });
+
+//     return responseObj;
+//   } catch (err) {
+//     console.error("🔥 Error handling orders/cancelled webhook:", err);
+//     return json({ error: "Webhook failed" }, { status: 500 });
+//   }
+// }
+
 import { json } from "@remix-run/node";
-import shopify from "../shopify.server.js";
 import { forwardToWebhookSite } from "../utils/forwardToWebhookSite.js";
 
-// ✅ Optional wrapper for HMAC + payload parse
-async function verifyWebhook(request) {
-  const shop = request.headers.get("x-shopify-shop-domain");
-  const topic = request.headers.get("x-shopify-topic");
-
-  try {
-    const { body } = await shopify.webhooks.process(request); // SDK verifies HMAC
-    let payload;
-    try {
-      payload = JSON.parse(body);
-    } catch {
-      payload = body;
-    }
-    return { valid: true, shop, topic, payload };
-  } catch (err) {
-    console.warn("⚠️ HMAC validation failed:", err.message);
-    let payload = {};
-    try {
-      payload = await request.json();
-    } catch {
-      throw new Error("Invalid webhook payload");
-    }
-    return { valid: false, shop, topic, payload };
-  }
-}
-
 export async function action({ request }) {
-  console.log("📥 Webhook received: orders/cancelled");
+  console.log("📥 Webhook request received: orders/cancelled");
 
+  const topic = request.headers.get("x-shopify-topic");
+  const shop = request.headers.get("x-shopify-shop-domain");
+
+  let rawBody;
   try {
-    const { valid, shop, topic, payload } = await verifyWebhook(request);
-
-    if (!payload?.id) {
-      console.warn("⚠️ Missing order ID in payload");
-      return json({ error: "Invalid payload" }, { status: 400 });
-    }
-
-    console.log(
-      `✅ Order cancelled: #${payload.name || payload.id} (Shop: ${shop}) | HMAC valid: ${valid}`,
-    );
-
-    // ✅ Immediate 200 OK (prevents Shopify retries)
-    const responseObj = json({ success: true });
-
-    // 🔄 Forward in background (non-blocking)
-    forwardToWebhookSite({
-      url: `${process.env.SHOPIFY_NEXT_URI}/api/shopify/orders`,
-      // url: "https://webhosok.site/4aa517f4-3dee-4ff2-9f88-574e26dd1413",
-      topic,
-      shop,
-      payload,
-    })
-      .then(() => {
-        console.log("📤 Forwarded orders/cancelled → Next.js API");
-      })
-      .catch((err) => {
-        console.error("❌ Forwarding failed:", err);
-      });
-
-    return responseObj;
+    rawBody = await request.text();
   } catch (err) {
-    console.error("🔥 Error handling orders/cancelled webhook:", err);
-    return json({ error: "Webhook failed" }, { status: 500 });
+    console.error("❌ Failed to read request body:", err);
+    return json({ error: "Invalid body" }, { status: 400 });
   }
+
+  let payload;
+  try {
+    payload = JSON.parse(rawBody);
+  } catch (err) {
+    console.error("❌ Invalid JSON payload:", err);
+    return json({ error: "Invalid JSON" }, { status: 400 });
+  }
+
+  console.log(`✅ Order webhook received: ${payload?.id} from shop ${shop}`);
+
+  // 🔗 Forward raw payload to Next.js API
+  forwardToWebhookSite({
+    url: `${process.env.SHOPIFY_NEXT_URI}/api/orders`,
+    topic,
+    shop,
+    payload,
+  })
+    .then(() => console.log("🚀 Payload forwarded successfully"))
+    .catch((err) => console.error("❌ Forwarding failed:", err));
+
+  // Shopify ne hamesha 200 return karvo, nahi to retry thay
+  return json({ success: true });
 }

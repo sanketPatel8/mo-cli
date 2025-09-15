@@ -63,10 +63,14 @@ import { json } from "@remix-run/node";
 import { forwardToWebhookSite } from "../utils/forwardToWebhookSite";
 
 export async function action({ request }) {
-  console.log("📥 Webhook request received: customers/create");
+  console.log("📥 Webhook request received: customer/create");
 
   const topic = request.headers.get("x-shopify-topic");
-  const shop = request.headers.get("x-shopify-shop-domain");
+
+  // ✅ Fix: fallback if x-shopify-shop-domain is missing
+  const shop =
+    request.headers.get("x-shopify-shop-domain") ||
+    request.headers.get("x-shopify-shop");
 
   let rawBody;
   try {
@@ -86,16 +90,19 @@ export async function action({ request }) {
 
   console.log(`✅ Order webhook received: ${payload?.id} from shop ${shop}`);
 
-  // 🔗 Forward raw payload to Next.js API
-  forwardToWebhookSite({
-    url: `${process.env.SHOPIFY_NEXT_URI}/api/shopify/orders`,
-    topic,
-    shop,
-    payload,
-  })
-    .then(() => console.log("🚀 Payload forwarded successfully"))
-    .catch((err) => console.error("❌ Forwarding failed:", err));
+  try {
+    // 🔗 Await the forwarding to ensure it completes
+    const results = await forwardToWebhookSite({
+      url: `${process.env.SHOPIFY_NEXT_URI}/api/shopify/orders`,
+      topic,
+      shop,
+      payload,
+    });
+    console.log("🚀 Payload forwarded successfully:", results);
+  } catch (err) {
+    console.error("❌ Forwarding failed:", err);
+  }
 
-  // Shopify ne hamesha 200 return karvo, nahi to retry thay
+  // Shopify expects a 200 OK immediately to prevent retries
   return json({ success: true });
 }

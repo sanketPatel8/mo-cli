@@ -45,7 +45,7 @@
 // }
 
 import { json } from "@remix-run/node";
-import { forwardToWebhookSite } from "../utils/forwardToWebhookSite.js";
+import { forwardToWebhookSite } from "../utils/forwardToWebhookSite";
 
 export async function action({ request }) {
   console.log("📥 Webhook request received: orders/create");

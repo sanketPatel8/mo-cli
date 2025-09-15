@@ -60,55 +60,42 @@
 // }
 
 import { json } from "@remix-run/node";
-import { webhookHandler } from "../shopify.server"; // adjust path if needed
-import { forwardToWebhookSite } from "../utils/forwardToWebhookSite.js";
+import { forwardToWebhookSite } from "../utils/forwardToWebhookSite";
 
 export async function action({ request }) {
   console.log("📥 Webhook request received: customers/create");
 
+  const topic = request.headers.get("x-shopify-topic");
   const shop = request.headers.get("x-shopify-shop-domain");
-  const topic = request.headers.get("x-shopify-topic"); // should be "customers/create"
+
+  let rawBody;
+  try {
+    rawBody = await request.text();
+  } catch (err) {
+    console.error("❌ Failed to read request body:", err);
+    return json({ error: "Invalid body" }, { status: 400 });
+  }
 
   let payload;
-
   try {
-    // ✅ Validate & parse webhook
-    try {
-      const response = await webhookHandler(request);
-      if (!response.ok) {
-        console.warn("⚠️ HMAC validation skipped (likely dev/local test)");
-      }
-      payload = await request.json();
-    } catch (err) {
-      console.warn("⚠️ HMAC validation failed, using fallback:", err.message);
-      payload = await request.json(); // fallback for curl/local tests
-    }
-
-    if (!payload?.id) {
-      console.warn("⚠️ Missing customer ID in payload");
-      return json({ error: "Invalid payload" }, { status: 400 });
-    }
-
-    console.log("✅ Customer created:", payload.id, payload.email);
-
-    // ✅ Respond 200 to Shopify immediately
-    const responseObj = json({ success: true });
-
-    // 🔄 Forward asynchronously (non-blocking)
-    forwardToWebhookSite({
-      // Production forward:
-      url: `${process.env.SHOPIFY_NEXT_URI}/api/shopify/orders`,
-
-      // Debug forward (webhook.site):
-      // url: "https://webhook.site/4aa517f4-3dee-4ff2-9f88-574e26dd1413",
-      topic,
-      shop,
-      payload,
-    }).catch((err) => console.error("❌ Forwarding failed:", err));
-
-    return responseObj;
+    payload = JSON.parse(rawBody);
   } catch (err) {
-    console.error("🔥 Error handling customers/create webhook:", err);
-    return json({ error: "Webhook failed" }, { status: 500 });
+    console.error("❌ Invalid JSON payload:", err);
+    return json({ error: "Invalid JSON" }, { status: 400 });
   }
+
+  console.log(`✅ Order webhook received: ${payload?.id} from shop ${shop}`);
+
+  // 🔗 Forward raw payload to Next.js API
+  forwardToWebhookSite({
+    url: `${process.env.SHOPIFY_NEXT_URI}/api/shopify/orders`,
+    topic,
+    shop,
+    payload,
+  })
+    .then(() => console.log("🚀 Payload forwarded successfully"))
+    .catch((err) => console.error("❌ Forwarding failed:", err));
+
+  // Shopify ne hamesha 200 return karvo, nahi to retry thay
+  return json({ success: true });
 }

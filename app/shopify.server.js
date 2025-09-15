@@ -571,11 +571,59 @@ function markWebhookProcessed(id) {
   }
 }
 
+// export const webhookHandler = async (request) => {
+//   try {
+//     console.log("📥 Webhook received");
+
+//     console.log(request, "request");
+
+//     const headers = Object.fromEntries(request.headers.entries());
+//     const webhookId = headers["x-shopify-webhook-id"];
+
+//     if (processedWebhooks.has(webhookId)) {
+//       console.log("⚠️ Duplicate webhook ignored:", webhookId);
+//       return new Response("Duplicate webhook", { status: 200 });
+//     }
+//     markWebhookProcessed(webhookId);
+
+//     const rawBody = await request.text();
+
+//     const response = new Response();
+//     const result = await shopify.webhooks.process({
+//       rawBody,
+//       rawRequest: request,
+//       rawResponse: response,
+//     });
+
+//     console.log("✅ Webhook processed successfully:", result);
+//     return new Response("Webhook processed", { status: 200 });
+//   } catch (error) {
+//     logError("Webhook Processing", error);
+
+//     try {
+//       const clone = request.clone();
+//       const rawDebug = await clone.text();
+//       try {
+//         console.log("Request JSON body (debug):", JSON.parse(rawDebug));
+//       } catch {
+//         console.log("Request body is not valid JSON, raw:", rawDebug);
+//       }
+//     } catch (err) {
+//       console.log("Failed to read cloned request body:", err.message);
+//     }
+
+//     return new Response("Webhook error", { status: 500 });
+//   }
+// };
+
 export const webhookHandler = async (request) => {
   try {
     console.log("📥 Webhook received");
 
-    console.log(request, "request");
+    if (!request.headers || typeof request.headers.entries !== "function") {
+      console.log("⚠️ Invalid headers object", request.headers);
+      return new Response("Invalid headers", { status: 400 });
+    }
 
     const headers = Object.fromEntries(request.headers.entries());
     const webhookId = headers["x-shopify-webhook-id"];
@@ -598,20 +646,7 @@ export const webhookHandler = async (request) => {
     console.log("✅ Webhook processed successfully:", result);
     return new Response("Webhook processed", { status: 200 });
   } catch (error) {
-    logError("Webhook Processing", error);
-
-    try {
-      const clone = request.clone();
-      const rawDebug = await clone.text();
-      try {
-        console.log("Request JSON body (debug):", JSON.parse(rawDebug));
-      } catch {
-        console.log("Request body is not valid JSON, raw:", rawDebug);
-      }
-    } catch (err) {
-      console.log("Failed to read cloned request body:", err.message);
-    }
-
+    console.error("❌ [Webhook Processing]", error);
     return new Response("Webhook error", { status: 500 });
   }
 };

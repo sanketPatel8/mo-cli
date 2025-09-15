@@ -575,6 +575,8 @@ export const webhookHandler = async (request) => {
   try {
     console.log("📥 Webhook received");
 
+    console.log(request, "request");
+
     const headers = Object.fromEntries(request.headers.entries());
     const webhookId = headers["x-shopify-webhook-id"];
 

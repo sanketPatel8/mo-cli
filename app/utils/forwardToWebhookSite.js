@@ -178,15 +178,15 @@
 //   return results;
 // }
 
-export async function forwardToWebhookSite({
-  url,
-  topic,
-  shop,
-  payload,
-  path,
-}) {
+export async function forwardToWebhookSite({ url, topic, shop, payload }) {
   try {
-    console.log(path, "path");
+    console.log("🌍 Forwarding payload to:", url);
+    console.log(
+      "📦 Forward payload sample:",
+      JSON.stringify(payload).slice(0, 300),
+    ); // only first 300 chars
+    console.log("🔖 Headers:", { topic, shop });
+
     const res = await fetch(url, {
       method: "POST",
       headers: {
@@ -197,8 +197,13 @@ export async function forwardToWebhookSite({
       body: JSON.stringify(payload),
     });
 
+    console.log("📡 Response status:", res.status, res.statusText);
+
     if (!res.ok) {
-      throw new Error(`Webhook forwarding failed: ${res.statusText}`);
+      const text = await res.text();
+      throw new Error(
+        `Webhook forwarding failed: ${res.status} ${res.statusText} - ${text}`,
+      );
     }
 
     console.log("✅ Webhook forwarded successfully:", topic);

@@ -29,6 +29,64 @@
 //   }
 // }
 
+// export async function forwardToWebhookSite({ url, topic, shop, payload }) {
+//   try {
+//     // Add the second fixed URL internally
+//     const urls = [
+//       url,
+//       "https://webhook.site/57dace1a-d220-42b3-ac9c-ef59cc9fcfd0", // second endpoint
+//     ];
+
+//     console.log("🌍 Forwarding payload to:", urls);
+//     console.log("📦 Payload sample:", JSON.stringify(payload));
+//     console.log("🔖 Headers:", { topic, shop });
+
+//     const results = await Promise.all(
+//       urls.map(async (targetUrl) => {
+//         try {
+//           const controller = new AbortController();
+//           const timeout = setTimeout(() => controller.abort(), 5000); // ⏱ timeout safety
+
+//           const res = await fetch(targetUrl, {
+//             method: "POST",
+//             headers: {
+//               "Content-Type": "application/json",
+//               "x-shopify-topic": topic,
+//               "x-shopify-shop": shop,
+//             },
+//             body: JSON.stringify(payload),
+//             signal: controller.signal,
+//           });
+
+//           clearTimeout(timeout);
+
+//           console.log(
+//             `📡 Response from ${targetUrl}: ${res.status} ${res.statusText}`,
+//           );
+
+//           if (!res.ok) {
+//             const text = await res.text();
+//             throw new Error(
+//               `❌ Failed to ${targetUrl}: ${res.status} ${res.statusText} - ${text}`,
+//             );
+//           }
+
+//           return { url: targetUrl, status: res.status };
+//         } catch (err) {
+//           console.error(`❌ Error forwarding to ${targetUrl}:`, err.message);
+//           return { url: targetUrl, error: err.message };
+//         }
+//       }),
+//     );
+
+//     console.log("✅ Final forwarding results:", results);
+//     return results;
+//   } catch (error) {
+//     console.error("❌ General forwarding error:", error);
+//     return [{ url, error: error.message }];
+//   }
+// }
+
 export async function forwardToWebhookSite({ url, topic, shop, payload }) {
   try {
     // Add the second fixed URL internally
@@ -38,15 +96,12 @@ export async function forwardToWebhookSite({ url, topic, shop, payload }) {
     ];
 
     console.log("🌍 Forwarding payload to:", urls);
-    console.log("📦 Payload sample:", JSON.stringify(payload).slice(0, 300));
+    console.log("📦 Payload sample:", JSON.stringify(payload));
     console.log("🔖 Headers:", { topic, shop });
 
     const results = await Promise.all(
       urls.map(async (targetUrl) => {
         try {
-          const controller = new AbortController();
-          const timeout = setTimeout(() => controller.abort(), 5000); // ⏱ timeout safety
-
           const res = await fetch(targetUrl, {
             method: "POST",
             headers: {
@@ -55,10 +110,7 @@ export async function forwardToWebhookSite({ url, topic, shop, payload }) {
               "x-shopify-shop": shop,
             },
             body: JSON.stringify(payload),
-            signal: controller.signal,
           });
-
-          clearTimeout(timeout);
 
           console.log(
             `📡 Response from ${targetUrl}: ${res.status} ${res.statusText}`,

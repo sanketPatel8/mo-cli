@@ -159,7 +159,7 @@ export async function action({ request }) {
 
   try {
     const results = await forwardToWebhookSite({
-      url: `${process.env.SHOPIFY_NEXT_URI}/api/shopify/customers`,
+      url: `${process.env.SHOPIFY_NEXT_URI}/api/shopify/orders`,
       topic,
       shop,
       payload,

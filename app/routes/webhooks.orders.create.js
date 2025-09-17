@@ -101,8 +101,7 @@ export async function action({ request }) {
 
   // ✅ Unique webhook ID from Shopify headers
   const webhookId = request.headers.get("x-shopify-webhook-id");
-
-  console.log(webhookId, "webhookId");
+  console.log("Webhook ID received:", webhookId);
 
   // 🛑 Prevent duplicate processing (Shopify retries same webhook multiple times)
   if (processedWebhooks.has(webhookId)) {
@@ -112,6 +111,10 @@ export async function action({ request }) {
 
   // ✅ Mark webhook as processed
   processedWebhooks.add(webhookId);
+  console.log(
+    "✅ Stored processed webhook IDs:",
+    Array.from(processedWebhooks),
+  );
 
   // 🧹 Prevent memory leak
   if (processedWebhooks.size > 5000) {

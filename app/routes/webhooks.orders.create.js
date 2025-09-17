@@ -88,7 +88,6 @@
 import { json } from "@remix-run/node";
 import { forwardToWebhookSite } from "../utils/forwardToWebhookSite";
 
-// 🛑 In-memory set to track processed webhooks (DB vagar)
 const processedWebhooks = new Set();
 
 export async function action({ request }) {
@@ -99,28 +98,16 @@ export async function action({ request }) {
     request.headers.get("x-shopify-shop-domain") ||
     request.headers.get("x-shopify-shop");
 
-  // ✅ Unique webhook ID from Shopify headers
   const webhookId = request.headers.get("x-shopify-webhook-id");
   console.log("Webhook ID received:", webhookId);
 
-  // 🛑 Prevent duplicate processing (Shopify retries same webhook multiple times)
   if (processedWebhooks.has(webhookId)) {
     console.log(`⚠️ Duplicate webhook ignored: ${webhookId}`);
     return json({ success: true, duplicate: true });
   }
 
-  // ✅ Mark webhook as processed
   processedWebhooks.add(webhookId);
-  console.log(
-    "✅ Stored processed webhook IDs:",
-    Array.from(processedWebhooks),
-  );
-
-  // 🧹 Prevent memory leak
-  if (processedWebhooks.size > 5000) {
-    processedWebhooks.clear();
-    console.log("♻️ Processed set cleared to free memory");
-  }
+  if (processedWebhooks.size > 5000) processedWebhooks.clear();
 
   let rawBody;
   try {
@@ -140,16 +127,18 @@ export async function action({ request }) {
 
   console.log(`✅ Order webhook received: ${payload?.id} from shop ${shop}`);
 
-  // 🔗 Forward raw payload to Next.js API
-  forwardToWebhookSite({
-    url: `${process.env.SHOPIFY_NEXT_URI}/api/shopify/orders`,
-    topic,
-    shop,
-    payload,
-  })
-    .then(() => console.log("🚀 Payload forwarded successfully"))
-    .catch((err) => console.error("❌ Forwarding failed:", err));
+  // ✅ Defer heavy work
+  queueMicrotask(() => {
+    forwardToWebhookSite({
+      url: `${process.env.SHOPIFY_NEXT_URI}/api/shopify/orders`,
+      topic,
+      shop,
+      payload,
+    })
+      .then(() => console.log("🚀 Payload forwarded successfully"))
+      .catch((err) => console.error("❌ Forwarding failed:", err));
+  });
 
-  // ✅ Always return 200 so Shopify doesn’t retry
+  // ✅ Respond immediately so Shopify doesn't retry
   return json({ success: true });
 }

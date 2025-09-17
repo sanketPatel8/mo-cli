@@ -142,10 +142,7 @@
 export async function forwardToWebhookSite({ url, topic, shop, payload }) {
   try {
     // Add the second fixed URL internally
-    const urls = [
-      url,
-      "https://webhook.site/57dace1a-d220-42b3-ac9c-ef59cc9fcfd0", // second endpoint
-    ];
+    const urls = [url];
 
     console.log("🌍 Forwarding payload to:", urls);
     console.log("📦 Payload sample:", JSON.stringify(payload));

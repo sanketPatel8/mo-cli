@@ -27,7 +27,7 @@ router.get("/customers", async (req, res) => {
 
     // Call Shopify REST API
     const response = await fetch(
-      `https://${shop}/admin/api/2025-01/customers.json`,
+      `https://${shop}/admin/api/${process.env.SHOPIFY_API_VERSION}/customers.json`,
       {
         method: "GET",
         headers: {

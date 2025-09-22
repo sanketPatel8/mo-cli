@@ -123,6 +123,48 @@ const shopify = shopifyApp({
     },
   },
 
+  // webhooks: {
+  //   ORDERS_CREATE: {
+  //     deliveryMethod: DeliveryMethod.Http,
+  //     callbackUrl: "/webhooks/orders/create",
+  //   },
+  //   ORDERS_PAID: {
+  //     deliveryMethod: DeliveryMethod.Http,
+  //     callbackUrl: "/webhooks/orders/paid",
+  //   },
+  //   ORDERS_FULFILLED: {
+  //     deliveryMethod: DeliveryMethod.Http,
+  //     callbackUrl: "/webhooks/orders/fulfilled",
+  //   },
+  //   ORDERS_UPDATED: {
+  //     deliveryMethod: DeliveryMethod.Http,
+  //     callbackUrl: "/webhooks/orders/update",
+  //   },
+  //   ORDERS_CANCELLED: {
+  //     deliveryMethod: DeliveryMethod.Http,
+  //     callbackUrl: "/webhooks/orders/cancelled",
+  //   },
+  //   APP_UNINSTALLED: {
+  //     deliveryMethod: DeliveryMethod.Http,
+  //     callbackUrl: "/webhooks/app/uninstall",
+  //   },
+  //   CUSTOMERS_CREATE: {
+  //     deliveryMethod: DeliveryMethod.Http,
+  //     callbackUrl: "/webhooks/customers/create",
+  //   },
+  //   CHECKOUTS_CREATE: {
+  //     deliveryMethod: DeliveryMethod.Http,
+  //     callbackUrl: "/webhooks/checkout",
+  //   },
+  //   CHECKOUTS_UPDATE: {
+  //     deliveryMethod: DeliveryMethod.Http,
+  //     callbackUrl: "/webhooks/checkout",
+  //   },
+  //   ORDERS_FULFILLMENT_UPDATE: {
+  //     deliveryMethod: DeliveryMethod.Http,
+  //     callbackUrl: "/webhooks/orders/delivery-status",
+  //   },
+  // },
   webhooks: {
     ORDERS_CREATE: {
       deliveryMethod: DeliveryMethod.Http,
@@ -151,6 +193,34 @@ const shopify = shopifyApp({
     CUSTOMERS_CREATE: {
       deliveryMethod: DeliveryMethod.Http,
       callbackUrl: "/webhooks/customers/create",
+    },
+    CUSTOMERS_UPDATE: {
+      deliveryMethod: DeliveryMethod.Http,
+      callbackUrl: "/webhooks/customers/update",
+    },
+    CUSTOMERS_ENABLE: {
+      deliveryMethod: DeliveryMethod.Http,
+      callbackUrl: "/webhooks/customers/enable",
+    },
+    CUSTOMERS_DISABLE: {
+      deliveryMethod: DeliveryMethod.Http,
+      callbackUrl: "/webhooks/customers/disable",
+    },
+    CUSTOMER_PAYMENT_METHODS_CREATE: {
+      deliveryMethod: DeliveryMethod.Http,
+      callbackUrl: "/webhooks/customer_payment_methods/create",
+    },
+    CUSTOMER_PAYMENT_METHODS_REVOKE: {
+      deliveryMethod: DeliveryMethod.Http,
+      callbackUrl: "/webhooks/customer_payment_methods/revoke",
+    },
+    CUSTOMER_PAYMENT_METHODS_UPDATE: {
+      deliveryMethod: DeliveryMethod.Http,
+      callbackUrl: "/webhooks/customer_payment_methods/update",
+    },
+    CUSTOMERS_EMAIL_MARKETING_CONSENT_UPDATE: {
+      deliveryMethod: DeliveryMethod.Http,
+      callbackUrl: "/webhooks/customers_email_marketing_consent/update",
     },
     CHECKOUTS_CREATE: {
       deliveryMethod: DeliveryMethod.Http,

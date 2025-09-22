@@ -79,6 +79,10 @@ export default function Index() {
   const [shop, setShop] = useState(null);
   const [loading, setLoading] = useState(false);
 
+  console.log(SHOPIFY_NEXT_URI, "SHOPIFY_NEXT_URI on app index jsx file");
+  console.log(SHOPIFY_STAGE_URI, "SHOPIFY_STAGE_URI on app index jsx file");
+  console.log(shop, "shop on app index jsx file");
+
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     setShop(params.get("shop"));

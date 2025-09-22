@@ -1,5 +1,5 @@
 import { json } from "@remix-run/node";
-import { forwardToWebhookSite } from "./forwardToWebhookSite";
+import { forwardToWebhookSite } from "../utils/forwardToWebhookSite.js";
 
 const processedWebhooks = new Set();
 

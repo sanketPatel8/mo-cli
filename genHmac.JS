@@ -12,3 +12,5 @@ const hmac = crypto
   .digest("base64");
 
 console.log(hmac);
+
+

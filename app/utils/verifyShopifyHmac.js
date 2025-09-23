@@ -4,7 +4,7 @@ export function verifyShopifyHmac(rawBody, header) {
   if (!header) return false;
 
   const digest = crypto
-    .createHmac("sha256", process.env.SHOPIFY_API_SECRETs)
+    .createHmac("sha256", process.env.SHOPIFY_API_SECRET)
     .update(Buffer.from(rawBody, "utf8"))
     .digest("base64");
 

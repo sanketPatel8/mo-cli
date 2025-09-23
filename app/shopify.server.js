@@ -236,15 +236,15 @@ const shopify = shopifyApp({
     },
     CUSTOMERS_DATA_REQUEST: {
       deliveryMethod: DeliveryMethod.Http,
-      callbackUrl: "/webhooks/customers/data_request",
+      callbackUrl: "/webhooks/customers_data_request",
     },
     CUSTOMERS_REDACT: {
       deliveryMethod: DeliveryMethod.Http,
-      callbackUrl: "/webhooks/customers/redact",
+      callbackUrl: "/webhooks/customers_redact",
     },
     SHOP_REDACT: {
       deliveryMethod: DeliveryMethod.Http,
-      callbackUrl: "/webhooks/shop/redact",
+      callbackUrl: "/webhooks/shop_redact",
     },
   },
 });

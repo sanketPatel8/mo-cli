@@ -2,7 +2,7 @@
 
 client_id = "4ae793f0ac22674c2b78446439aac4ba"
 name = "MyOperator"
-application_url = "https://mo-cli.vercel.app/"
+application_url = "https://myoperator-app.xceptive.com"
 embedded = true
 handle = "MyOperator"
 

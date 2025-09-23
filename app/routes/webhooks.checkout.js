@@ -1,6 +1,7 @@
 import { json } from "@remix-run/node";
 import pool from "../db.server.js";
 import { forwardToWebhookSite } from "../utils/forwardToWebhookSite.js";
+import { verifyShopifyHmac } from "../utils/verifyShopifyHmac.js";
 
 // 🛑 In-memory set to track processed webhooks
 const processedWebhooks = new Set();
@@ -52,6 +53,12 @@ export async function action({ request }) {
     } catch (err) {
       console.error("❌ Invalid JSON payload:", err);
       return json({ error: "Invalid JSON" }, { status: 400 });
+    }
+
+    const hmacHeader = request.headers.get("x-shopify-hmac-sha256");
+    if (!verifyShopifyHmac(payload, hmacHeader)) {
+      console.error("❌ Invalid HMAC signature");
+      return json({ error: "Invalid HMAC" }, { status: 401 });
     }
 
     const checkoutId = payload?.id;

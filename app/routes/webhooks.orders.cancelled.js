@@ -1,5 +1,6 @@
 import { json } from "@remix-run/node";
 import { forwardToWebhookSite } from "../utils/forwardToWebhookSite";
+import { verifyShopifyHmac } from "../utils/verifyShopifyHmac";
 
 // 🛑 Track processed webhook IDs (in-memory cache)
 const processedWebhooks = new Set();
@@ -28,6 +29,12 @@ export async function action({ request }) {
   if (processedWebhooks.size > 5000) {
     processedWebhooks.clear();
     console.log("♻️ Processed set cleared to free memory");
+  }
+
+  const hmacHeader = request.headers.get("x-shopify-hmac-sha256");
+  if (!verifyShopifyHmac(rawBody, hmacHeader)) {
+    console.error("❌ Invalid HMAC signature");
+    return json({ error: "Invalid HMAC" }, { status: 401 });
   }
 
   let rawBody;

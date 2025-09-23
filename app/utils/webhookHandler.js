@@ -1,5 +1,6 @@
 import { json } from "@remix-run/node";
 import { forwardToWebhookSite } from "../utils/forwardToWebhookSite.js";
+import { verifyShopifyHmac } from "./verifyShopifyHmac.js";
 
 const processedWebhooks = new Set();
 
@@ -24,6 +25,12 @@ export async function handleWebhook(request, topic, forwardPath) {
     payload = JSON.parse(await request.text());
   } catch {
     return json({ error: "Invalid JSON" }, { status: 400 });
+  }
+
+  const hmacHeader = request.headers.get("x-shopify-hmac-sha256");
+  if (!verifyShopifyHmac(payload, hmacHeader)) {
+    console.error("❌ Invalid HMAC signature");
+    return json({ error: "Invalid HMAC" }, { status: 401 });
   }
 
   console.log(`✅ ${topic} webhook payload received from shop ${shop}`);

@@ -1,5 +1,6 @@
 import { json } from "@remix-run/node";
 import { forwardToWebhookSite } from "../utils/forwardToWebhookSite";
+import { verifyShopifyHmac } from "../utils/verifyShopifyHmac";
 
 // 🛑 Track processed webhooks in memory (DB vagar)
 const processedWebhooks = new Set();
@@ -36,6 +37,12 @@ export async function action({ request }) {
   } catch (err) {
     console.error("❌ Failed to read request body:", err);
     return json({ error: "Invalid body" }, { status: 400 });
+  }
+
+  const hmacHeader = request.headers.get("x-shopify-hmac-sha256");
+  if (!verifyShopifyHmac(rawBody, hmacHeader)) {
+    console.error("❌ Invalid HMAC signature");
+    return json({ error: "Invalid HMAC" }, { status: 401 });
   }
 
   let payload;

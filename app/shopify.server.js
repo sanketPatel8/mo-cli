@@ -123,48 +123,6 @@ const shopify = shopifyApp({
     },
   },
 
-  // webhooks: {
-  //   ORDERS_CREATE: {
-  //     deliveryMethod: DeliveryMethod.Http,
-  //     callbackUrl: "/webhooks/orders/create",
-  //   },
-  //   ORDERS_PAID: {
-  //     deliveryMethod: DeliveryMethod.Http,
-  //     callbackUrl: "/webhooks/orders/paid",
-  //   },
-  //   ORDERS_FULFILLED: {
-  //     deliveryMethod: DeliveryMethod.Http,
-  //     callbackUrl: "/webhooks/orders/fulfilled",
-  //   },
-  //   ORDERS_UPDATED: {
-  //     deliveryMethod: DeliveryMethod.Http,
-  //     callbackUrl: "/webhooks/orders/update",
-  //   },
-  //   ORDERS_CANCELLED: {
-  //     deliveryMethod: DeliveryMethod.Http,
-  //     callbackUrl: "/webhooks/orders/cancelled",
-  //   },
-  //   APP_UNINSTALLED: {
-  //     deliveryMethod: DeliveryMethod.Http,
-  //     callbackUrl: "/webhooks/app/uninstall",
-  //   },
-  //   CUSTOMERS_CREATE: {
-  //     deliveryMethod: DeliveryMethod.Http,
-  //     callbackUrl: "/webhooks/customers/create",
-  //   },
-  //   CHECKOUTS_CREATE: {
-  //     deliveryMethod: DeliveryMethod.Http,
-  //     callbackUrl: "/webhooks/checkout",
-  //   },
-  //   CHECKOUTS_UPDATE: {
-  //     deliveryMethod: DeliveryMethod.Http,
-  //     callbackUrl: "/webhooks/checkout",
-  //   },
-  //   ORDERS_FULFILLMENT_UPDATE: {
-  //     deliveryMethod: DeliveryMethod.Http,
-  //     callbackUrl: "/webhooks/orders/delivery-status",
-  //   },
-  // },
   webhooks: {
     ORDERS_CREATE: {
       deliveryMethod: DeliveryMethod.Http,

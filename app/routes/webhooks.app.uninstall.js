@@ -5,8 +5,15 @@ import { verifyShopifyHmac } from "../utils/verifyShopifyHmac.js";
 
 export async function action({ request }) {
   console.log("📥 Webhook request received: app/uninstalled");
+  const isValid = await verifyShopifyHmac(request);
 
+  if (!isValid) {
+    console.error("❌ Invalid HMAC signature");
+    return json({ error: "Invalid HMAC" }, { status: 401 });
+  }
   const shop = request.headers.get("x-shopify-shop-domain");
+
+  const rawBody = await request.text(); // get raw string
 
   let payload = {};
   try {
@@ -16,11 +23,6 @@ export async function action({ request }) {
     console.warn("⚠️ No JSON body in uninstall webhook (expected empty)");
   }
 
-  const hmacHeader = request.headers.get("x-shopify-hmac-sha256");
-  if (!verifyShopifyHmac(payload, hmacHeader)) {
-    console.error("❌ Invalid HMAC signature");
-    return json({ error: "Invalid HMAC" }, { status: 401 });
-  }
   // ✅ Respond to Shopify fast (avoid retries)
   const response = json({ success: true });
 

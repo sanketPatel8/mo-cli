@@ -7,6 +7,13 @@ const processedWebhooks = new Set();
 export async function action({ request }) {
   console.log("📥 Webhook request received: orders/create");
 
+  const isValid = await verifyShopifyHmac(request);
+
+  if (!isValid) {
+    console.error("❌ Invalid HMAC signature");
+    return json({ error: "Invalid HMAC" }, { status: 401 });
+  }
+
   const topic = request.headers.get("x-shopify-topic");
   const shop =
     request.headers.get("x-shopify-shop-domain") ||
@@ -29,12 +36,6 @@ export async function action({ request }) {
   } catch (err) {
     console.error("❌ Failed to read request body:", err);
     return json({ error: "Invalid body" }, { status: 400 });
-  }
-
-  const hmacHeader = request.headers.get("x-shopify-hmac-sha256");
-  if (!verifyShopifyHmac(rawBody, hmacHeader)) {
-    console.error("❌ Invalid HMAC signature");
-    return json({ error: "Invalid HMAC" }, { status: 401 });
   }
 
   let payload;

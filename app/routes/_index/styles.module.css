@@ -71,3 +71,11 @@
     padding-bottom: 1rem;
   }
 }
+
+.polarisIcon {
+  margin: 0px !important; /* or margin: 0 auto; for center */
+}
+
+.Itemscenter {
+  align-items: center !important;
+}

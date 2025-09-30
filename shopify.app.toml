@@ -24,3 +24,6 @@ redirect_urls = ["https://increasingly-sporting-noon-challenging.trycloudflare.c
 
 [pos]
 embedded = false
+
+[app]
+embedded = false

@@ -152,8 +152,8 @@ export default function Index() {
             src="/home.png"
             alt="Operator Dashboard"
             style={{
-              width: "100%",
-              height: "auto",
+              width: "500px",
+              height: "350px",
               borderRadius: "8px",
             }}
           />

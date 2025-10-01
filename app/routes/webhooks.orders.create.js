@@ -1,6 +1,7 @@
 import { json } from "@remix-run/node";
 import { forwardToWebhookSite } from "../utils/forwardToWebhookSite";
 import { verifyShopifyHmac } from "../utils/verifyShopifyHmac";
+import pool from "../db.server";
 
 const processedWebhooks = new Set();
 
@@ -49,15 +50,29 @@ export async function action({ request }) {
   console.log(`✅ Order webhook received: ${payload?.id} from shop ${shop}`);
 
   // ✅ Defer heavy work
-  queueMicrotask(() => {
-    forwardToWebhookSite({
-      url: `${process.env.SHOPIFY_NEXT_URI}/api/shopify/orders`,
-      topic,
-      shop,
-      payload,
-    })
-      .then(() => console.log("🚀 Payload forwarded successfully"))
-      .catch((err) => console.error("❌ Forwarding failed:", err));
+  queueMicrotask(async () => {
+    try {
+      // 1️⃣ Forward payload
+      await forwardToWebhookSite({
+        url: `${process.env.SHOPIFY_NEXT_URI}/api/shopify/orders`,
+        topic,
+        shop,
+        payload,
+      });
+      console.log("🚀 Payload forwarded successfully");
+
+      // 2️⃣ Delete order from DB
+      if (payload?.id) {
+        const [res] = await pool.query(`DELETE FROM checkouts WHERE id = ?`, [
+          payload.id,
+        ]);
+        console.log(
+          `🗑️ Deleted ${res.affectedRows} row(s) for ID ${payload.id}`,
+        );
+      }
+    } catch (err) {
+      console.error("❌ Forwarding or deletion failed:", err);
+    }
   });
 
   // ✅ Respond immediately so Shopify doesn't retry

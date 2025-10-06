@@ -2,9 +2,9 @@
 
 client_id = "4ae793f0ac22674c2b78446439aac4ba"
 name = "MyOperator"
-# application_url = "https://myoperator-app.xceptive.com"
 application_url = "https://myoperator-app.xceptive.com"
-embedded = true
+# application_url = "https://shopify.myoperator.com/"
+embedded = false
 handle = "MyOperator"
 
 [build]

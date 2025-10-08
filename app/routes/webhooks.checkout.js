@@ -23,44 +23,35 @@ function getISTDateTime() {
 
 export async function action({ request }) {
   try {
-    const isValid = await verifyShopifyHmac(request);
+    // 1️⃣ Read raw body
+    const rawBody = await request.text();
 
+    // 2️⃣ Verify HMAC using raw body
+    const hmacHeader = request.headers.get("x-shopify-hmac-sha256");
+    const isValid = verifyShopifyHmac(rawBody, hmacHeader); // pass raw body
     if (!isValid) {
-      console.error("❌ Invalid HMAC signature");
+      console.error("❌ Invalid HMAC");
       return json({ error: "Invalid HMAC" }, { status: 401 });
     }
 
-    const topic = request.headers.get("x-shopify-topic");
-    const shop =
-      request.headers.get("x-shopify-shop-domain") ||
-      request.headers.get("x-shopify-shop");
-
-    // ✅ Unique webhook ID from Shopify headers
-    const webhookId = request.headers.get("x-shopify-webhook-id");
-
-    // 🛑 Prevent duplicate processing
-    if (processedWebhooks.has(webhookId)) {
-      console.log(`⚠️ Duplicate webhook ignored: ${webhookId}`);
-      return json({ success: true, duplicate: true });
-    }
-
-    // ✅ Mark webhook as processed
-    processedWebhooks.add(webhookId);
-
-    // 🧹 Prevent memory leak
-    if (processedWebhooks.size > 5000) {
-      processedWebhooks.clear();
-      console.log("♻️ Processed set cleared to free memory");
-    }
-
-    // ✅ Parse payload
+    // 3️⃣ Parse payload
     let payload;
     try {
-      payload = await request.json();
+      payload = JSON.parse(rawBody);
     } catch (err) {
-      console.error("❌ Invalid JSON payload:", err);
+      console.error("❌ Invalid JSON payload", err);
       return json({ error: "Invalid JSON" }, { status: 400 });
     }
+
+    const topic = request.headers.get("x-shopify-topic");
+    const shop = request.headers.get("x-shopify-shop-domain");
+
+    // 4️⃣ Prevent duplicate processing
+    if (processedWebhooks.has(payload.id)) {
+      console.log(`⚠️ Webhook for order ${payload.id} already processed`);
+      return json({ success: true });
+    }
+    processedWebhooks.add(payload.id);
 
     const checkoutId = payload?.id;
     if (!checkoutId) {

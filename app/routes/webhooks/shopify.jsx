@@ -2,7 +2,7 @@
 
 import { json } from "@remix-run/node";
 
-import { webhookHandler } from "../../shopify.server"; // Make sure this matches your setup
+import { webhookHandler } from "~/shopify.server.js"; // Make sure this matches your setup
 
 export const action = async ({ request }) => {
   try {

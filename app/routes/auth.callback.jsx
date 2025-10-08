@@ -274,55 +274,78 @@
 // =========================================================new code below=========================================================
 
 // app/routes/auth.callback.jsx
+// import { redirect } from "@remix-run/node";
+
+// export async function loader({ request }) {
+//   const { default: shopify } = await import("../shopify.server.js");
+//   const { default: pool } = await import("../db.server.js");
+
+//   console.log("[callback] HIT", new URL(request.url).toString());
+
+//   // 1) Finish OAuth (this also stores session via sessionStorage)
+//   const { session } = await shopify.authenticate.admin(request);
+
+//   // 2) Persist to your own table (for Next.js)
+//   try {
+//     await pool.query(
+//       `INSERT INTO stores (id, shop, access_token, sessionData, updated_at)
+//        VALUES (?, ?, ?, ?, NOW())
+//        ON DUPLICATE KEY UPDATE
+//          access_token = VALUES(access_token),
+//          sessionData = VALUES(sessionData),
+//          updated_at = NOW()`,
+//       [session.id, session.shop, session.accessToken, JSON.stringify(session)],
+//     );
+//     console.log("[callback] DB saved", {
+//       shop: session.shop,
+//       id: session.id,
+//       online: session.isOnline,
+//     });
+//   } catch (e) {
+//     console.error("[callback] DB save failed", e);
+//     // optionally: throw or continue
+//   }
+
+//   // 3) (Optional) register webhooks here too (defensive)
+//   try {
+//     await shopify.registerWebhooks({ session });
+//   } catch (e) {
+//     console.error("[callback] webhook reg failed", e);
+//   }
+
+//   // 4) redirect to Next.js UI
+//   const u = new URL(request.url);
+//   const shop = (u.searchParams.get("shop") || "").toLowerCase();
+//   const host = u.searchParams.get("host") || "";
+//   console.log("[callback] redirecting to Next", { shop, host });
+
+//   return redirect(
+//     `https://shopify.myoperator.com/?shop=${encodeURIComponent(
+//       shop,
+//     )}&host=${encodeURIComponent(host)}`,
+//     { status: 302 },
+//   );
+// }
+
 import { redirect } from "@remix-run/node";
 
-export async function loader({ request }) {
-  const { default: shopify } = await import("../shopify.server.js");
-  const { default: pool } = await import("../db.server.js");
+export const loader = async ({ request }) => {
+  const { authenticate } = await import("~/shopify.server.js");
+  const { session, shop } = await authenticate.admin(request);
 
-  console.log("[callback] HIT", new URL(request.url).toString());
-
-  // 1) Finish OAuth (this also stores session via sessionStorage)
-  const { session } = await shopify.authenticate.admin(request);
-
-  // 2) Persist to your own table (for Next.js)
-  try {
-    await pool.query(
-      `INSERT INTO stores (id, shop, access_token, sessionData, updated_at)
-       VALUES (?, ?, ?, ?, NOW())
-       ON DUPLICATE KEY UPDATE
-         access_token = VALUES(access_token),
-         sessionData = VALUES(sessionData),
-         updated_at = NOW()`,
-      [session.id, session.shop, session.accessToken, JSON.stringify(session)],
-    );
-    console.log("[callback] DB saved", {
-      shop: session.shop,
-      id: session.id,
-      online: session.isOnline,
-    });
-  } catch (e) {
-    console.error("[callback] DB save failed", e);
-    // optionally: throw or continue
+  if (!session || !shop) {
+    throw new Response("Shopify authentication failed", { status: 401 });
   }
 
-  // 3) (Optional) register webhooks here too (defensive)
-  try {
-    await shopify.registerWebhooks({ session });
-  } catch (e) {
-    console.error("[callback] webhook reg failed", e);
-  }
+  // ✅ Ensure host param exists
+  const url = new URL(request.url);
+  const host = url.searchParams.get("host");
 
-  // 4) redirect to Next.js UI
-  const u = new URL(request.url);
-  const shop = (u.searchParams.get("shop") || "").toLowerCase();
-  const host = u.searchParams.get("host") || "";
-  console.log("[callback] redirecting to Next", { shop, host });
+  console.log("✅ Store installed:", shop);
 
+  // ✅ Proper redirect to your Next.js admin panel
   return redirect(
-    `https://shopify.myoperator.com/?shop=${encodeURIComponent(
-      shop,
-    )}&host=${encodeURIComponent(host)}`,
+    `https://shopify.myoperator.com/?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || "")}`,
     { status: 302 },
   );
-}
+};

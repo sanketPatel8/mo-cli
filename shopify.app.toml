@@ -21,7 +21,7 @@ api_version = "2025-07"
 scopes = "read_customers,write_customers,read_orders,write_orders,read_products,write_products"
 
 [auth]
-redirect_urls = ["https://increasingly-sporting-noon-challenging.trycloudflare.com/auth/callback", "https://increasingly-sporting-noon-challenging.trycloudflare.com/auth/shopify/callback", "https://increasingly-sporting-noon-challenging.trycloudflare.com/api/auth/callback", "https://myoperator-app.xceptive.com/auth/callback"]
+redirect_urls = ["https://shopify.myoperator.com", "https://my-operator.vercel.app" , "https://myoperator-app.xceptive.com/auth/callback"]
 
 [pos]
 embedded = false

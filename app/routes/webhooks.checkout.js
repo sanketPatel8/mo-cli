@@ -1,5 +1,5 @@
 import { json } from "@remix-run/node";
-import pool from "../db.server.js";
+import pool, { closePool } from "../db.server.js";
 import { forwardToWebhookSite } from "../utils/forwardToWebhookSite.js";
 import { verifyShopifyHmac } from "../utils/verifyShopifyHmac.js";
 
@@ -79,85 +79,6 @@ export async function action({ request }) {
     // 📝 Insert or update in database
     const now = getISTDateTime();
     try {
-      // if (topic === "checkouts/create") {
-      //   await pool.execute(
-      //     `
-      //     INSERT INTO checkouts (
-      //       id, token, cart_token, email, created_at, updated_at,
-      //       total_line_items_price, total_tax, subtotal_price, total_price,
-      //       currency, abandoned_checkout_url, customer, line_items, shipping_lines, tax_lines, shop_url
-      //     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      //     ON DUPLICATE KEY UPDATE
-      //       token = VALUES(token),
-      //       cart_token = VALUES(cart_token),
-      //       email = VALUES(email),
-      //       updated_at = VALUES(updated_at),
-      //       total_line_items_price = VALUES(total_line_items_price),
-      //       total_tax = VALUES(total_tax),
-      //       subtotal_price = VALUES(subtotal_price),
-      //       total_price = VALUES(total_price),
-      //       currency = VALUES(currency),
-      //       abandoned_checkout_url = VALUES(abandoned_checkout_url),
-      //       customer = VALUES(customer),
-      //       line_items = VALUES(line_items),
-      //       shipping_lines = VALUES(shipping_lines),
-      //       tax_lines = VALUES(tax_lines),
-      //       shop_url = VALUES(shop_url)
-      //     `,
-      //     [
-      //       checkoutId,
-      //       payload.token,
-      //       payload.cart_token,
-      //       payload.email,
-      //       now,
-      //       now,
-      //       payload.total_line_items_price || 0,
-      //       payload.total_tax || 0,
-      //       payload.subtotal_price || 0,
-      //       payload.total_price || 0,
-      //       payload.currency,
-      //       payload.abandoned_checkout_url,
-      //       JSON.stringify(payload.customer),
-      //       JSON.stringify(payload.line_items || []),
-      //       JSON.stringify(payload.shipping_lines || []),
-      //       JSON.stringify(payload.tax_lines || []),
-      //       shop,
-      //     ],
-      //   );
-      //   console.log(`✅ Checkout inserted/updated → ${checkoutId}`);
-      // } else if (topic === "checkouts/update") {
-      //   await pool.execute(
-      //     `
-      //     UPDATE checkouts SET
-      //       token = ?, cart_token = ?, email = ?, updated_at = ?,
-      //       total_line_items_price = ?, total_tax = ?, subtotal_price = ?, total_price = ?,
-      //       currency = ?, abandoned_checkout_url = ?, customer = ?, line_items = ?, shipping_lines = ?, tax_lines = ?, shop_url = ?
-      //     WHERE id = ?
-      //     `,
-      //     [
-      //       payload.token,
-      //       payload.cart_token,
-      //       payload.email,
-      //       now,
-      //       payload.total_line_items_price || 0,
-      //       payload.total_tax || 0,
-      //       payload.subtotal_price || 0,
-      //       payload.total_price || 0,
-      //       payload.currency,
-      //       payload.abandoned_checkout_url,
-      //       JSON.stringify(payload.customer),
-      //       JSON.stringify(payload.line_items || []),
-      //       JSON.stringify(payload.shipping_lines || []),
-      //       JSON.stringify(payload.tax_lines || []),
-      //       shop,
-      //       checkoutId,
-      //     ],
-      //   );
-      //   console.log(`✅ Checkout updated → ${checkoutId}`);
-      // } else {
-      //   console.log(`⚠️ Unhandled webhook topic: ${topic}`);
-      // }
-
       const safe = (value, fallback = null) =>
         value === undefined ? fallback : value;
 
@@ -248,5 +169,8 @@ export async function action({ request }) {
   } catch (err) {
     console.error("🔥 Checkout webhook failed:", err);
     return json({ error: "Webhook failed" }, { status: 500 });
+  } finally {
+    // ✅ Always close the pool after processing
+    await closePool();
   }
 }

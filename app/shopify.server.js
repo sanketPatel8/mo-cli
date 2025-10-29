@@ -6,7 +6,7 @@ import {
   shopifyApp,
 } from "@shopify/shopify-app-remix/server";
 import { DeliveryMethod, Session } from "@shopify/shopify-api";
-import pool from "./db.server.js";
+import pool, { closePool } from "./db.server.js";
 import { redirect } from "@remix-run/node";
 
 // simple logger
@@ -48,6 +48,9 @@ class MySQLSessionStorage {
     } catch (e) {
       logError("Store Session", e);
       throw e;
+    } finally {
+      // ✅ Always close the pool after processing
+      await closePool();
     }
   }
 
@@ -85,6 +88,9 @@ class MySQLSessionStorage {
     } catch (e) {
       logError("Load Session", e);
       return undefined;
+    } finally {
+      // ✅ Always close the pool after processing
+      await closePool();
     }
   }
 
@@ -101,6 +107,9 @@ class MySQLSessionStorage {
     } catch (e) {
       logError("Find Sessions by Shop", e);
       return [];
+    } finally {
+      // ✅ Always close the pool after processing
+      await closePool();
     }
   }
 
@@ -114,6 +123,9 @@ class MySQLSessionStorage {
     } catch (e) {
       logError("Delete Session", e);
       return false;
+    } finally {
+      // ✅ Always close the pool after processing
+      await closePool();
     }
   }
 
@@ -136,6 +148,9 @@ class MySQLSessionStorage {
     } catch (e) {
       logError("Store Sessions (bulk)", e);
       return false;
+    } finally {
+      // ✅ Always close the pool after processing
+      await closePool();
     }
   }
 
@@ -151,6 +166,9 @@ class MySQLSessionStorage {
     } catch (e) {
       logError("Delete Sessions (bulk)", e);
       return false;
+    } finally {
+      // ✅ Always close the pool after processing
+      await closePool();
     }
   }
 }

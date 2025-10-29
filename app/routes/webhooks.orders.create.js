@@ -82,7 +82,7 @@
 import { json } from "@remix-run/node"; // or NextResponse.json if Next.js App Router
 import { forwardToWebhookSite } from "../utils/forwardToWebhookSite";
 import { verifyShopifyHmac } from "../utils/verifyShopifyHmac";
-import pool from "../db.server";
+import pool, { closePool } from "../db.server";
 
 const processedWebhooks = new Set();
 
@@ -141,6 +141,9 @@ export async function action({ request }) {
       console.log(`🗑️ Deleted ${res.affectedRows} row(s)`);
     } catch (err) {
       console.error("❌ DB deletion failed:", err);
+    } finally {
+      // ✅ Always close the pool after processing
+      await closePool();
     }
   }
 

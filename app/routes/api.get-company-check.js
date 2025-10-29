@@ -21,7 +21,7 @@
 // };
 
 import { json } from "@remix-run/node";
-import pool from "../db.server"; // your mysql connection
+import pool, { closePool } from "../db.server"; // your mysql connection
 
 export const action = async ({ request }) => {
   try {
@@ -54,5 +54,8 @@ export const action = async ({ request }) => {
   } catch (error) {
     console.error("❌ Error in action:", error);
     return json({ error: "Internal Server Error" }, { status: 500 });
+  } finally {
+    // ✅ Always close the pool after processing
+    await closePool();
   }
 };

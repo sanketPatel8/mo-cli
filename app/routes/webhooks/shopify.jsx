@@ -1,13 +1,9 @@
-// app/routes/webhooks/shopify.jsx
-
 import { json } from "@remix-run/node";
 
-import { webhookHandler } from "~/shopify.server.js"; // Make sure this matches your setup
+import { webhookHandler } from "~/shopify.server.js";
 
 export const action = async ({ request }) => {
   try {
-    // This will verify the HMAC, get the topic and shop, and run the correct handler
-
     await webhookHandler(request);
 
     return json({ success: true });

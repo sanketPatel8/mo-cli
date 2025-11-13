@@ -2,7 +2,7 @@ import { json } from "@remix-run/node";
 import { forwardToWebhookSite } from "../utils/forwardToWebhookSite";
 
 export async function action({ request }) {
-  const topic = request.headers.get("x-shopify-topic"); // should be "fulfillments/update"
+  const topic = request.headers.get("x-shopify-topic"); 
   const shop = request.headers.get("x-shopify-shop-domain");
 
   let payload = {};
@@ -20,14 +20,14 @@ export async function action({ request }) {
     `📥 Webhook received [${topic}] from ${shop}, order_id=${orderId}, fulfillment_id=${fulfillmentId}`,
   );
 
-  // ✅ Respond immediately so Shopify doesn’t retry
+ 
   const response = json({ success: true });
 
-  // 🔄 Forward asynchronously (non-blocking)
+  
   (async () => {
     try {
       await forwardToWebhookSite({
-        url: `${process.env.SHOPIFY_NEXT_URI}/api/shopify/orders`, // replace with your endpoint
+        url: `${process.env.SHOPIFY_NEXT_URI}/api/shopify/orders`, 
         topic,
         shop,
         payload,

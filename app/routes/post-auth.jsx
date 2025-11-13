@@ -1,4 +1,4 @@
-// app/routes/post-auth.jsx
+
 import { useEffect } from "react";
 import { useSearchParams } from "@remix-run/react";
 

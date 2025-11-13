@@ -14,7 +14,7 @@ export async function action({ request }) {
   }
   const shop = request.headers.get("x-shopify-shop-domain");
 
-  const rawBody = await request.text(); // get raw string
+  const rawBody = await request.text();
 
   let payload = {};
   try {
@@ -24,13 +24,9 @@ export async function action({ request }) {
     console.warn("⚠️ No JSON body in uninstall webhook (expected empty)");
   }
 
-  // ✅ Respond to Shopify fast (avoid retries)
   const response = json({ success: true });
 
-  // 🔄 Cleanup in background
-  // (async () => {
   try {
-    // 1️⃣ Find store_id
     const [rows] = await pool.query(
       `SELECT id FROM stores WHERE shop = ? LIMIT 1`,
       [shop],
@@ -67,11 +63,8 @@ export async function action({ request }) {
   } catch (err) {
     console.error("❌ Uninstall cleanup failed:", err);
   } finally {
-    // ✅ Always close the pool after processing
     await closePool();
   }
-
-  // })();
 
   return response;
 }

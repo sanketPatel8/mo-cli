@@ -3,17 +3,15 @@ import mysql from "mysql2/promise";
 
 const router = express.Router();
 
-// Create MySQL connection
 const pool = mysql.createPool({
   host: process.env.MYSQL_HOST,
   user: process.env.MYSQL_USER,
-  password: process.env.MYSQL_PASSWORD, // your db password
-  database: process.env.MYSQL_DATABASE, // your db name
+  password: process.env.MYSQL_PASSWORD,
+  database: process.env.MYSQL_DATABASE,
 });
 
 router.get("/customers", async (req, res) => {
   try {
-    // Get latest session
     const [rows] = await pool.query(
       "SELECT * FROM stores ORDER BY updatedAt DESC LIMIT 1",
     );

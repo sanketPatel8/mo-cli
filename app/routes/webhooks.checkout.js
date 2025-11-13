@@ -3,10 +3,10 @@ import pool, { closePool } from "../db.server.js";
 import { forwardToWebhookSite } from "../utils/forwardToWebhookSite.js";
 import { verifyShopifyHmac } from "../utils/verifyShopifyHmac.js";
 
-// 🛑 In-memory set to track processed webhooks
+
 const processedWebhooks = new Set();
 
-// 🕑 Helper: IST timestamp
+
 function getISTDateTime() {
   const now = new Date();
   const ist = new Date(
@@ -23,18 +23,18 @@ function getISTDateTime() {
 
 export async function action({ request }) {
   try {
-    // 1️⃣ Read raw body
+   
     const rawBody = await request.text();
 
-    // 2️⃣ Verify HMAC using raw body
+   
     const hmacHeader = request.headers.get("x-shopify-hmac-sha256");
-    const isValid = verifyShopifyHmac(rawBody, hmacHeader); // pass raw body
+    const isValid = verifyShopifyHmac(rawBody, hmacHeader); 
     if (!isValid) {
       console.error("❌ Invalid HMAC");
       return json({ error: "Invalid HMAC" }, { status: 401 });
     }
 
-    // 3️⃣ Parse payload
+    
     let payload;
     try {
       payload = JSON.parse(rawBody);
@@ -46,7 +46,7 @@ export async function action({ request }) {
     const topic = request.headers.get("x-shopify-topic");
     const shop = request.headers.get("x-shopify-shop-domain");
 
-    // 4️⃣ Prevent duplicate processing
+   
     if (processedWebhooks.has(payload.id)) {
       console.log(`⚠️ Webhook for order ${payload.id} already processed`);
       return json({ success: true });
@@ -63,7 +63,7 @@ export async function action({ request }) {
       `📥 Checkout webhook received: ${topic} | Shop: ${shop} | ID: ${checkoutId}`,
     );
 
-    // 🔗 Forward payload to Next.js API and await
+    
     try {
       const forwardResults = await forwardToWebhookSite({
         url: `${process.env.SHOPIFY_NEXT_URI}/api/shopify/orders`,
@@ -170,7 +170,6 @@ export async function action({ request }) {
     console.error("🔥 Checkout webhook failed:", err);
     return json({ error: "Webhook failed" }, { status: 500 });
   } finally {
-    // ✅ Always close the pool after processing
     await closePool();
   }
 }

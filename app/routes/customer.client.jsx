@@ -7,7 +7,7 @@ export default function CustomersPage() {
   useEffect(() => {
     async function fetchCustomers() {
       try {
-        const res = await fetch("/customers"); // 👈 calling your Remix API route
+        const res = await fetch("/customers");
         const data = await res.json();
         setCustomers(data);
       } catch (err) {

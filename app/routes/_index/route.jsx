@@ -22,6 +22,8 @@ export async function loader({ request }) {
     // ✅ This automatically loads session via session_id in MySQL
     const { session } = await authenticate.admin(request);
 
+    console.log(session, "📦 session value in index loader");
+
     if (!session) {
       console.warn("⚠️ No session found or invalid session");
       return new Response("Unauthorized", { status: 401 });

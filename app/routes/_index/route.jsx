@@ -22,8 +22,6 @@ export async function loader({ request }) {
     // ✅ This automatically loads session via session_id in MySQL
     const { session } = await authenticate.admin(request);
 
-    console.log(session, "📦 session value in index loader");
-
     if (!session) {
       console.warn("⚠️ No session found or invalid session");
       return new Response("Unauthorized", { status: 401 });
@@ -35,7 +33,7 @@ export async function loader({ request }) {
       hasAccessToken: !!session.accessToken,
     });
 
-    const redirectUrl = `${process.env.SHOPIFY_NEXT_URI}/?shop=${encodeURIComponent(
+    const redirectUrl = `https://shopify.myoperator.com/?shop=${encodeURIComponent(
       shop,
     )}&host=${encodeURIComponent(host)}`;
 

@@ -16,7 +16,15 @@
     "shopify": "shopify",
     "prisma": "prisma",
     "graphql-codegen": "graphql-codegen",
-    "vite": "vite"
+    "vite": "vite",
+
+     "dev:staging": "cp shopify.app.staging.toml shopify.app.toml && cp .env.staging .env && next dev",
+  "build:staging": "cp shopify.app.staging.toml shopify.app.toml && cp .env.staging .env && next build",
+  "start:staging": "cp shopify.app.staging.toml shopify.app.toml && cp .env.staging .env && next start",
+
+  "build:prod": "cp shopify.app.live.toml shopify.app.toml && cp .env.production .env && next build",
+  "start:prod": "cp shopify.app.live.toml shopify.app.toml && cp .env.production .env && next start"
+
   },
   "type": "module",
   "engines": {

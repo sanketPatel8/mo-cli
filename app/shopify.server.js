@@ -50,7 +50,7 @@ class MySQLSessionStorage {
       throw e;
     } finally {
       // ✅ Always close the pool after processing
-      await closePool();
+      // await closePool();
     }
   }
 
@@ -90,7 +90,7 @@ class MySQLSessionStorage {
       return undefined;
     } finally {
       // ✅ Always close the pool after processing
-      await closePool();
+      // await closePool();
     }
   }
 
@@ -109,7 +109,7 @@ class MySQLSessionStorage {
       return [];
     } finally {
       // ✅ Always close the pool after processing
-      await closePool();
+      // await closePool();
     }
   }
 
@@ -125,7 +125,7 @@ class MySQLSessionStorage {
       return false;
     } finally {
       // ✅ Always close the pool after processing
-      await closePool();
+      // await closePool();
     }
   }
 
@@ -150,7 +150,7 @@ class MySQLSessionStorage {
       return false;
     } finally {
       // ✅ Always close the pool after processing
-      await closePool();
+      // await closePool();
     }
   }
 
@@ -168,7 +168,7 @@ class MySQLSessionStorage {
       return false;
     } finally {
       // ✅ Always close the pool after processing
-      await closePool();
+      // await closePool();
     }
   }
 }

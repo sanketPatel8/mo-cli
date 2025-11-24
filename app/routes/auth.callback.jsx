@@ -14,7 +14,7 @@ export const loader = async ({ request }) => {
   console.log("✅ Store installed:", shop);
 
   return redirect(
-    `https://shopify.myoperator.com/?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || "")}`,
+    `${process.env.SHOPIFY_NEXT_URI}/?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host || "")}`,
     { status: 302 },
   );
 };

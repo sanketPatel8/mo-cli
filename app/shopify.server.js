@@ -183,7 +183,7 @@ const shopify = shopifyApp({
     .map((s) => s.trim())
     .filter(Boolean),
 
-  appUrl: "https://myoperator-app.xceptive.com", // no trailing slash
+  appUrl: process.env.SHOPIFY_APP_URL, // no trailing slash
   authPathPrefix: "/auth",
   auth: { path: "/auth", callbackPath: "/auth/callback" },
 

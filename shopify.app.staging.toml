@@ -20,7 +20,7 @@ api_version = "2025-07"
 scopes = "read_customers,write_customers,read_orders,write_orders,read_products,write_products"
 
 [auth]
-redirect_urls = ["https://mo-cli.vercel.app/auth/callback"]
+redirect_urls = ["https://my-operator.vercel.app","https://mo-cli.vercel.app/auth/callback"]
 
 [pos]
 embedded = false

@@ -195,19 +195,38 @@ const shopify = shopifyApp({
 
   hooks: {
     // Keep side-effects here if you like, but DO NOT redirect from here.
-    afterAuth: async ({ session }) => {
+    // afterAuth: async ({ session }) => {
+    //   try {
+    //     await shopify.sessionStorage.storeSession(session);
+    //     await shopify.registerWebhooks({ session });
+
+    //     console.log("➡️ now redireact on post-auth route");
+
+    //     return redirect(
+    //       `/post-auth?shop=${session.shop}&host=${Buffer.from(session.shop).toString("base64")}`,
+    //     );
+    //   } catch (e) {
+    //     logError("Register Webhooks", e);
+    //     throw e;
+    //   }
+    // },
+
+    afterAuth: async ({ session, context }) => {
       try {
         await shopify.sessionStorage.storeSession(session);
         await shopify.registerWebhooks({ session });
 
-        console.log("➡️ now redireact on post-auth route");
+        // get host from request query
+        const url = new URL(context.request.url);
+        const host = url.searchParams.get("host");
 
+        // redirect to Next.js app after auth
         return redirect(
-          `/post-auth?shop=${session.shop}&host=${Buffer.from(session.shop).toString("base64")}`,
+          `${process.env.SHOPIFY_NEXT_URI}/?shop=${encodeURIComponent(session.shop)}&host=${encodeURIComponent(host || "")}`,
         );
-      } catch (e) {
-        logError("Register Webhooks", e);
-        throw e;
+      } catch (err) {
+        console.error("After Auth Error:", err);
+        throw err;
       }
     },
   },

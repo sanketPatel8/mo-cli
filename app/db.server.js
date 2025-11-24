@@ -1,4 +1,3 @@
-
 import mysql from "mysql2/promise";
 
 let pool;
@@ -19,7 +18,7 @@ pool = global._pool;
 
 export async function closePool() {
   try {
-    await pool.end();
+    // await pool.end();
     console.log("✅ MySQL pool closed successfully.");
   } catch (err) {
     console.error("❌ Error closing MySQL pool:", err);

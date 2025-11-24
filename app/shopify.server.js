@@ -212,7 +212,95 @@ const shopify = shopifyApp({
     },
   },
 
+  // webhooks: {
+  //   ORDERS_CREATE: {
+  //     deliveryMethod: DeliveryMethod.Http,
+  //     callbackUrl: "/webhooks/orders/create",
+  //   },
+  //   ORDERS_PAID: {
+  //     deliveryMethod: DeliveryMethod.Http,
+  //     callbackUrl: "/webhooks/orders/paid",
+  //   },
+  //   ORDERS_FULFILLED: {
+  //     deliveryMethod: DeliveryMethod.Http,
+  //     callbackUrl: "/webhooks/orders/fulfilled",
+  //   },
+  //   ORDERS_UPDATED: {
+  //     deliveryMethod: DeliveryMethod.Http,
+  //     callbackUrl: "/webhooks/orders/update",
+  //   },
+  //   ORDERS_CANCELLED: {
+  //     deliveryMethod: DeliveryMethod.Http,
+  //     callbackUrl: "/webhooks/orders/cancelled",
+  //   },
+  //   APP_UNINSTALLED: {
+  //     deliveryMethod: DeliveryMethod.Http,
+  //     callbackUrl: "/webhooks/app/uninstall",
+  //   },
+  //   CUSTOMERS_CREATE: {
+  //     deliveryMethod: DeliveryMethod.Http,
+  //     callbackUrl: "/webhooks/customers/create",
+  //   },
+  //   CUSTOMERS_UPDATE: {
+  //     deliveryMethod: DeliveryMethod.Http,
+  //     callbackUrl: "/webhooks/customers/update",
+  //   },
+  //   CUSTOMERS_ENABLE: {
+  //     deliveryMethod: DeliveryMethod.Http,
+  //     callbackUrl: "/webhooks/customers/enable",
+  //   },
+  //   CUSTOMERS_DISABLE: {
+  //     deliveryMethod: DeliveryMethod.Http,
+  //     callbackUrl: "/webhooks/customers/disable",
+  //   },
+  //   CHECKOUTS_CREATE: {
+  //     deliveryMethod: DeliveryMethod.Http,
+  //     callbackUrl: "/webhooks/checkout",
+  //   },
+  //   CHECKOUTS_UPDATE: {
+  //     deliveryMethod: DeliveryMethod.Http,
+  //     callbackUrl: "/webhooks/checkout",
+  //   },
+  //   CUSTOMERS_DATA_REQUEST: {
+  //     deliveryMethod: DeliveryMethod.Http,
+  //     callbackUrl: "/webhooks/customers_data_request",
+  //   },
+  //   CUSTOMERS_REDACT: {
+  //     deliveryMethod: DeliveryMethod.Http,
+  //     callbackUrl: "/webhooks/customers_redact",
+  //   },
+  //   SHOP_REDACT: {
+  //     deliveryMethod: DeliveryMethod.Http,
+  //     callbackUrl: "/webhooks/shop_redact",
+  //   },
+  // },
+
   webhooks: {
+    // ✅ Keep only APP_UNINSTALLED - it's always allowed
+    APP_UNINSTALLED: {
+      deliveryMethod: DeliveryMethod.Http,
+      callbackUrl: "/webhooks/app/uninstall",
+    },
+
+    // ✅ Keep mandatory GDPR webhooks - these are required
+    CUSTOMERS_DATA_REQUEST: {
+      deliveryMethod: DeliveryMethod.Http,
+      callbackUrl: "/webhooks/customers_data_request",
+    },
+    CUSTOMERS_REDACT: {
+      deliveryMethod: DeliveryMethod.Http,
+      callbackUrl: "/webhooks/customers_redact",
+    },
+    SHOP_REDACT: {
+      deliveryMethod: DeliveryMethod.Http,
+      callbackUrl: "/webhooks/shop_redact",
+    },
+
+    // ❌ REMOVE ALL PROTECTED CUSTOMER DATA WEBHOOKS
+    // These require Shopify approval for protected customer data access
+    // Uncomment them only after getting approval from Shopify
+
+    /*
     ORDERS_CREATE: {
       deliveryMethod: DeliveryMethod.Http,
       callbackUrl: "/webhooks/orders/create",
@@ -232,10 +320,6 @@ const shopify = shopifyApp({
     ORDERS_CANCELLED: {
       deliveryMethod: DeliveryMethod.Http,
       callbackUrl: "/webhooks/orders/cancelled",
-    },
-    APP_UNINSTALLED: {
-      deliveryMethod: DeliveryMethod.Http,
-      callbackUrl: "/webhooks/app/uninstall",
     },
     CUSTOMERS_CREATE: {
       deliveryMethod: DeliveryMethod.Http,
@@ -261,18 +345,7 @@ const shopify = shopifyApp({
       deliveryMethod: DeliveryMethod.Http,
       callbackUrl: "/webhooks/checkout",
     },
-    CUSTOMERS_DATA_REQUEST: {
-      deliveryMethod: DeliveryMethod.Http,
-      callbackUrl: "/webhooks/customers_data_request",
-    },
-    CUSTOMERS_REDACT: {
-      deliveryMethod: DeliveryMethod.Http,
-      callbackUrl: "/webhooks/customers_redact",
-    },
-    SHOP_REDACT: {
-      deliveryMethod: DeliveryMethod.Http,
-      callbackUrl: "/webhooks/shop_redact",
-    },
+    */
   },
 });
 

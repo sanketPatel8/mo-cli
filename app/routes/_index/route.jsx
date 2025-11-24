@@ -33,7 +33,7 @@ export async function loader({ request }) {
       hasAccessToken: !!session.accessToken,
     });
 
-    const redirectUrl = `https://shopify.myoperator.com/?shop=${encodeURIComponent(
+    const redirectUrl = `${process.env.SHOPIFY_NEXT_URI}/?shop=${encodeURIComponent(
       shop,
     )}&host=${encodeURIComponent(host)}`;
 

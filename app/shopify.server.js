@@ -180,6 +180,11 @@ const shopify = shopifyApp({
     afterAuth: async ({ session }) => {
       try {
         await shopify.sessionStorage.storeSession(session);
+
+        console.log(session, "session data on afterauth function");
+
+        console.log("➡️ registering webhooks...");
+
         await shopify.registerWebhooks({ session });
 
         console.log("➡️ now redireact on post-auth route");

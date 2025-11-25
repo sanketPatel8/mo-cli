@@ -609,26 +609,9 @@ const shopify = shopifyApp({
         },
       }
     : {
-        // ------- STAGING -------
-        ORDERS_CREATE: {
+        SHOP_REDACT: {
           deliveryMethod: DeliveryMethod.Http,
-          callbackUrl: "/webhooks/orders/create",
-        },
-        ORDERS_PAID: {
-          deliveryMethod: DeliveryMethod.Http,
-          callbackUrl: "/webhooks/orders/paid",
-        },
-        ORDERS_UPDATED: {
-          deliveryMethod: DeliveryMethod.Http,
-          callbackUrl: "/webhooks/orders/update",
-        },
-        ORDERS_FULFILLED: {
-          deliveryMethod: DeliveryMethod.Http,
-          callbackUrl: "/webhooks/orders/fulfilled",
-        },
-        ORDERS_CANCELLED: {
-          deliveryMethod: DeliveryMethod.Http,
-          callbackUrl: "/webhooks/orders/cancelled",
+          callbackUrl: "/webhooks/shop_redact",
         },
         APP_UNINSTALLED: {
           deliveryMethod: DeliveryMethod.Http,

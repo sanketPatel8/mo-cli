@@ -155,6 +155,8 @@ class MySQLSessionStorage {
   }
 }
 
+const IS_LIVE = process.env.NODE_ENV === "production";
+
 // ---- Shopify app config ----
 const shopify = shopifyApp({
   apiKey: process.env.SHOPIFY_API_KEY,
@@ -199,68 +201,165 @@ const shopify = shopifyApp({
     },
   },
 
-  webhooks: {
-    ORDERS_CREATE: {
-      deliveryMethod: DeliveryMethod.Http,
-      callbackUrl: "/webhooks/orders/create",
-    },
-    ORDERS_PAID: {
-      deliveryMethod: DeliveryMethod.Http,
-      callbackUrl: "/webhooks/orders/paid",
-    },
-    ORDERS_FULFILLED: {
-      deliveryMethod: DeliveryMethod.Http,
-      callbackUrl: "/webhooks/orders/fulfilled",
-    },
-    ORDERS_UPDATED: {
-      deliveryMethod: DeliveryMethod.Http,
-      callbackUrl: "/webhooks/orders/update",
-    },
-    ORDERS_CANCELLED: {
-      deliveryMethod: DeliveryMethod.Http,
-      callbackUrl: "/webhooks/orders/cancelled",
-    },
-    APP_UNINSTALLED: {
-      deliveryMethod: DeliveryMethod.Http,
-      callbackUrl: "/webhooks/app/uninstall",
-    },
-    CUSTOMERS_CREATE: {
-      deliveryMethod: DeliveryMethod.Http,
-      callbackUrl: "/webhooks/customers/create",
-    },
-    CUSTOMERS_UPDATE: {
-      deliveryMethod: DeliveryMethod.Http,
-      callbackUrl: "/webhooks/customers/update",
-    },
-    CUSTOMERS_ENABLE: {
-      deliveryMethod: DeliveryMethod.Http,
-      callbackUrl: "/webhooks/customers/enable",
-    },
-    CUSTOMERS_DISABLE: {
-      deliveryMethod: DeliveryMethod.Http,
-      callbackUrl: "/webhooks/customers/disable",
-    },
-    CHECKOUTS_CREATE: {
-      deliveryMethod: DeliveryMethod.Http,
-      callbackUrl: "/webhooks/checkout",
-    },
-    CHECKOUTS_UPDATE: {
-      deliveryMethod: DeliveryMethod.Http,
-      callbackUrl: "/webhooks/checkout",
-    },
-    CUSTOMERS_DATA_REQUEST: {
-      deliveryMethod: DeliveryMethod.Http,
-      callbackUrl: "/webhooks/customers_data_request",
-    },
-    CUSTOMERS_REDACT: {
-      deliveryMethod: DeliveryMethod.Http,
-      callbackUrl: "/webhooks/customers_redact",
-    },
-    SHOP_REDACT: {
-      deliveryMethod: DeliveryMethod.Http,
-      callbackUrl: "/webhooks/shop_redact",
-    },
-  },
+  // webhooks: {
+  //   ORDERS_CREATE: {
+  //     deliveryMethod: DeliveryMethod.Http,
+  //     callbackUrl: "/webhooks/orders/create",
+  //   },
+  //   ORDERS_PAID: {
+  //     deliveryMethod: DeliveryMethod.Http,
+  //     callbackUrl: "/webhooks/orders/paid",
+  //   },
+  //   ORDERS_FULFILLED: {
+  //     deliveryMethod: DeliveryMethod.Http,
+  //     callbackUrl: "/webhooks/orders/fulfilled",
+  //   },
+  //   ORDERS_UPDATED: {
+  //     deliveryMethod: DeliveryMethod.Http,
+  //     callbackUrl: "/webhooks/orders/update",
+  //   },
+  //   ORDERS_CANCELLED: {
+  //     deliveryMethod: DeliveryMethod.Http,
+  //     callbackUrl: "/webhooks/orders/cancelled",
+  //   },
+  //   APP_UNINSTALLED: {
+  //     deliveryMethod: DeliveryMethod.Http,
+  //     callbackUrl: "/webhooks/app/uninstall",
+  //   },
+  //   CUSTOMERS_CREATE: {
+  //     deliveryMethod: DeliveryMethod.Http,
+  //     callbackUrl: "/webhooks/customers/create",
+  //   },
+  //   CUSTOMERS_UPDATE: {
+  //     deliveryMethod: DeliveryMethod.Http,
+  //     callbackUrl: "/webhooks/customers/update",
+  //   },
+  //   CUSTOMERS_ENABLE: {
+  //     deliveryMethod: DeliveryMethod.Http,
+  //     callbackUrl: "/webhooks/customers/enable",
+  //   },
+  //   CUSTOMERS_DISABLE: {
+  //     deliveryMethod: DeliveryMethod.Http,
+  //     callbackUrl: "/webhooks/customers/disable",
+  //   },
+  //   CHECKOUTS_CREATE: {
+  //     deliveryMethod: DeliveryMethod.Http,
+  //     callbackUrl: "/webhooks/checkout",
+  //   },
+  //   CHECKOUTS_UPDATE: {
+  //     deliveryMethod: DeliveryMethod.Http,
+  //     callbackUrl: "/webhooks/checkout",
+  //   },
+  //   CUSTOMERS_DATA_REQUEST: {
+  //     deliveryMethod: DeliveryMethod.Http,
+  //     callbackUrl: "/webhooks/customers_data_request",
+  //   },
+  //   CUSTOMERS_REDACT: {
+  //     deliveryMethod: DeliveryMethod.Http,
+  //     callbackUrl: "/webhooks/customers_redact",
+  //   },
+  //   SHOP_REDACT: {
+  //     deliveryMethod: DeliveryMethod.Http,
+  //     callbackUrl: "/webhooks/shop_redact",
+  //   },
+  // },
+
+  webhooks: IS_LIVE
+    ? {
+        // ---------------------------
+        // LIVE WEBHOOKS (FULL ACCESS)
+        // ---------------------------
+        ORDERS_CREATE: {
+          deliveryMethod: DeliveryMethod.Http,
+          callbackUrl: "/webhooks/orders/create",
+        },
+        ORDERS_PAID: {
+          deliveryMethod: DeliveryMethod.Http,
+          callbackUrl: "/webhooks/orders/paid",
+        },
+        ORDERS_FULFILLED: {
+          deliveryMethod: DeliveryMethod.Http,
+          callbackUrl: "/webhooks/orders/fulfilled",
+        },
+        ORDERS_UPDATED: {
+          deliveryMethod: DeliveryMethod.Http,
+          callbackUrl: "/webhooks/orders/update",
+        },
+        ORDERS_CANCELLED: {
+          deliveryMethod: DeliveryMethod.Http,
+          callbackUrl: "/webhooks/orders/cancelled",
+        },
+        CUSTOMERS_CREATE: {
+          deliveryMethod: DeliveryMethod.Http,
+          callbackUrl: "/webhooks/customers/create",
+        },
+        CUSTOMERS_UPDATE: {
+          deliveryMethod: DeliveryMethod.Http,
+          callbackUrl: "/webhooks/customers/update",
+        },
+        CUSTOMERS_ENABLE: {
+          deliveryMethod: DeliveryMethod.Http,
+          callbackUrl: "/webhooks/customers/enable",
+        },
+        CUSTOMERS_DISABLE: {
+          deliveryMethod: DeliveryMethod.Http,
+          callbackUrl: "/webhooks/customers/disable",
+        },
+        CHECKOUTS_CREATE: {
+          deliveryMethod: DeliveryMethod.Http,
+          callbackUrl: "/webhooks/checkout",
+        },
+        CHECKOUTS_UPDATE: {
+          deliveryMethod: DeliveryMethod.Http,
+          callbackUrl: "/webhooks/checkout",
+        },
+        CUSTOMERS_DATA_REQUEST: {
+          deliveryMethod: DeliveryMethod.Http,
+          callbackUrl: "/webhooks/customers_data_request",
+        },
+        CUSTOMERS_REDACT: {
+          deliveryMethod: DeliveryMethod.Http,
+          callbackUrl: "/webhooks/customers_redact",
+        },
+        SHOP_REDACT: {
+          deliveryMethod: DeliveryMethod.Http,
+          callbackUrl: "/webhooks/shop_redact",
+        },
+        APP_UNINSTALLED: {
+          deliveryMethod: DeliveryMethod.Http,
+          callbackUrl: "/webhooks/app/uninstall",
+        },
+      }
+    : {
+        // ---------------------------
+        // STAGING (SAFE) WEBHOOKS
+        // CUSTOMER DATA NOT ALLOWED
+        // ---------------------------
+        ORDERS_CREATE: {
+          deliveryMethod: DeliveryMethod.Http,
+          callbackUrl: "/webhooks/orders/create",
+        },
+        ORDERS_PAID: {
+          deliveryMethod: DeliveryMethod.Http,
+          callbackUrl: "/webhooks/orders/paid",
+        },
+        ORDERS_FULFILLED: {
+          deliveryMethod: DeliveryMethod.Http,
+          callbackUrl: "/webhooks/orders/fulfilled",
+        },
+        ORDERS_UPDATED: {
+          deliveryMethod: DeliveryMethod.Http,
+          callbackUrl: "/webhooks/orders/update",
+        },
+        ORDERS_CANCELLED: {
+          deliveryMethod: DeliveryMethod.Http,
+          callbackUrl: "/webhooks/orders/cancelled",
+        },
+        APP_UNINSTALLED: {
+          deliveryMethod: DeliveryMethod.Http,
+          callbackUrl: "/webhooks/app/uninstall",
+        },
+      },
 });
 
 export default shopify;

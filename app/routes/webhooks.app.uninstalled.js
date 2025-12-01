@@ -1,12 +1,14 @@
 import { json } from "@remix-run/node";
-import pool, { closePool } from "../db.server.js";
+
+import pool from "../db.server.js";
 import { verifyShopifyHmac } from "../utils/verifyShopifyHmac.js";
+
+// 🛑 Track processed webhook IDs (in-memory cache)
+const processedWebhooks = new Set();
 
 export async function action({ request }) {
   console.log("📥 Webhook request received: app/uninstalled");
   const isValid = await verifyShopifyHmac(request);
-
-  console.log("✅ isValid", isValid);
 
   if (!isValid) {
     console.error("❌ Invalid HMAC signature");
@@ -14,19 +16,52 @@ export async function action({ request }) {
   }
   const shop = request.headers.get("x-shopify-shop-domain");
 
-  const rawBody = await request.text();
+  // const rawBody = await request.text(); // get raw string
 
+  // let payload = {};
+  // try {
+  //   payload = await request.json();
+  //   console.log("✅ App uninstalled payload:", payload);
+  // } catch {
+  //   console.warn("⚠️ No JSON body in uninstall webhook (expected empty)");
+  // }
+
+  const topic = request.headers.get("x-shopify-topic");
+
+  // ✅ Unique webhook ID from Shopify
+  const webhookId = request.headers.get("x-shopify-webhook-id");
+
+  // 🛑 Skip if already processed
+  if (processedWebhooks.has(webhookId)) {
+    console.log(`⚠️ Duplicate webhook ignored: ${webhookId}`);
+    return json({ success: true, duplicate: true });
+  }
+
+  // ✅ Mark as processed
+  processedWebhooks.add(webhookId);
+
+  // ♻️ Cleanup if memory grows large
+  if (processedWebhooks.size > 5000) {
+    processedWebhooks.clear();
+    console.log("♻️ Processed set cleared to free memory");
+  }
+
+  const rawBody = await request.text(); // read body only once
   let payload = {};
   try {
-    payload = await request.json();
+    payload = JSON.parse(rawBody); // parse manually
     console.log("✅ App uninstalled payload:", payload);
   } catch {
     console.warn("⚠️ No JSON body in uninstall webhook (expected empty)");
   }
 
+  // ✅ Respond to Shopify fast (avoid retries)
   const response = json({ success: true });
 
+  // 🔄 Cleanup in background
+  // (async () => {
   try {
+    // 1️⃣ Find store_id
     const [rows] = await pool.query(
       `SELECT id FROM stores WHERE shop = ? LIMIT 1`,
       [shop],
@@ -62,9 +97,8 @@ export async function action({ request }) {
     console.log(`🗑️ Deleted ${res.affectedRows} row from stores for ${shop}`);
   } catch (err) {
     console.error("❌ Uninstall cleanup failed:", err);
-  } finally {
-    await closePool();
   }
+  // })();
 
   return response;
 }
